@@ -1,0 +1,50 @@
+{
+    "name": "ondrejmirtes/phplrt-runtime",
+    "type": "library",
+    "description": "phplrt runtime (lexer, parser, source, position and their contracts) downgraded to PHP 7.4",
+    "homepage": "https://github.com/phplrt/phplrt",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Kirill Nesmeyanov",
+            "email": "nesk@xakep.ru"
+        }
+    ],
+    "require": {
+        "php": "^7.4 || ^8.0",
+        "ext-json": "*",
+        "ext-pcre": "*",
+        "symfony/polyfill-php80": "^1.23",
+        "symfony/polyfill-php81": "^1.27"
+    },
+    "replace": {
+        "phplrt/runtime": "self.version",
+        "phplrt/lexer": "self.version",
+        "phplrt/lexer-contracts": "self.version",
+        "phplrt/parser": "self.version",
+        "phplrt/parser-contracts": "self.version",
+        "phplrt/position": "self.version",
+        "phplrt/position-contracts": "self.version",
+        "phplrt/position-factory-contracts": "self.version",
+        "phplrt/source": "self.version",
+        "phplrt/source-contracts": "self.version",
+        "phplrt/source-factory-contracts": "self.version"
+    },
+    "autoload": {
+        "psr-4": {
+            "Phplrt\\Contracts\\Lexer\\": "src/Contracts/Lexer",
+            "Phplrt\\Contracts\\Parser\\": "src/Contracts/Parser",
+            "Phplrt\\Contracts\\Position\\": "src/Contracts/Position",
+            "Phplrt\\Contracts\\Source\\": "src/Contracts/Source",
+            "Phplrt\\Lexer\\": "src/Lexer",
+            "Phplrt\\Parser\\": "src/Parser",
+            "Phplrt\\Position\\": "src/Position",
+            "Phplrt\\Source\\": "src/Source"
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "4.2.x-dev"
+        }
+    }
+}
