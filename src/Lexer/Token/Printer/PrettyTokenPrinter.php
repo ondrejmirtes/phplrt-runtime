@@ -47,11 +47,11 @@ final class PrettyTokenPrinter implements TokenPrinterInterface
         $name = $token->name;
         $channel = $token->channel;
 
-        if ($channel === Channel::EndOfInput) {
+        if ($channel === Channel::EndOfInput()) {
             return 'end of input';
         }
 
-        if ($channel === Channel::Unknown && $name === null) {
+        if ($channel === Channel::Unknown() && $name === null) {
             return \sprintf('%s (unknown token)', $this->printValue($token));
         }
 

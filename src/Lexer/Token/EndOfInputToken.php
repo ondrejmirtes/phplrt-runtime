@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Phplrt\Lexer\Token;
 
 use Phplrt\Contracts\Lexer\Channel;
-use Phplrt\Contracts\Lexer\ChannelInterface;
 
 class EndOfInputToken extends Token
 {
@@ -15,14 +14,6 @@ class EndOfInputToken extends Token
     public const TOKEN_ID = -1;
 
     /**
-     * Note: This "@var" docblock is required because the php-cs-fixer
-     *       contains a bug that can remove the dependency as unused.
-     *
-     * @var ChannelInterface
-     */
-    public const TOKEN_CHANNEL = Channel::EndOfInput;
-
-    /**
      * @param int<0, max> $offset
      */
     public function __construct(
@@ -30,8 +21,8 @@ class EndOfInputToken extends Token
     ) {
         parent::__construct(
             id: self::TOKEN_ID,
-            name: self::TOKEN_CHANNEL->name,
-            channel: self::TOKEN_CHANNEL,
+            name: Channel::EndOfInput()->name,
+            channel: Channel::EndOfInput(),
             value: '',
             offset: $offset,
         );

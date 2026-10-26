@@ -39,9 +39,11 @@ final class MessageInterpolator
      * beginning, so the answer is remembered for as long as the token it has
      * been asked about is alive.
      *
-     * @var \WeakMap<TokenInterface, PositionInterface>
+     * Note: Upstream this is a WeakMap, which does not exist on PHP 7.4.
+     *
+     * @var \SplObjectStorage<TokenInterface, PositionInterface>
      */
-    private readonly \WeakMap $positions;
+    private readonly \SplObjectStorage $positions;
 
     public function __construct(
         /**
@@ -50,7 +52,7 @@ final class MessageInterpolator
          */
         private readonly PositionFactoryInterface $factory = new PositionFactory(),
     ) {
-        $this->positions = new \WeakMap();
+        $this->positions = new \SplObjectStorage();
     }
 
     /**

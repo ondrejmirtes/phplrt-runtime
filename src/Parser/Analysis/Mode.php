@@ -5,23 +5,45 @@ declare(strict_types=1);
 namespace Phplrt\Parser\Analysis;
 
 /**
- * How much of the work an analysis does.
+ * How far the analysis goes.
+ *
+ * Note: Upstream this is an enum. This fork supports PHP 7.4, so every case
+ *       is a singleton returned by a static method of the same name.
  */
-enum Mode
+final class Mode
 {
     /**
-     * Recognizes the source without building anything of it.
-     *
-     * The result tells how much of the source the grammar reads and what
-     * stands in the way, and carries no value.
+     * @var array<non-empty-string, self>
      */
-    case SyntaxCheck;
+    private static array $instances = [];
 
     /**
-     * Recognizes the source and builds the value the grammar describes.
-     *
-     * A source the grammar reads only in part is built into the value of that
-     * part.
+     * @var non-empty-string
+     * @readonly
      */
-    case Tolerant;
+    public string $name;
+
+    /**
+     * @param non-empty-string $name
+     */
+    private function __construct(string $name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * Only recognizes the source, no reducer is run.
+     */
+    public static function SyntaxCheck(): self
+    {
+        return self::$instances['SyntaxCheck'] ??= new self('SyntaxCheck');
+    }
+
+    /**
+     * Recognizes the source and builds the result.
+     */
+    public static function Tolerant(): self
+    {
+        return self::$instances['Tolerant'] ??= new self('Tolerant');
+    }
 }

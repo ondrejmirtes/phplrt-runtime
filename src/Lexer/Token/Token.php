@@ -54,8 +54,9 @@ class Token implements TokenInterface
 
     public function __toString(): string
     {
-        /** @var PrettyTokenPrinter $printer */
-        static $printer = new PrettyTokenPrinter();
+        /** @var PrettyTokenPrinter|null $printer */
+        static $printer = null;
+        $printer ??= new PrettyTokenPrinter();
 
         return $printer->print($this);
     }

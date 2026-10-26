@@ -29,11 +29,14 @@ class Lexer implements LexerInterface
     /**
      * The channels a lexer says nothing about are not reported.
      *
-     * @var non-empty-list<ChannelInterface>
+     * Note: Upstream this is a constant, which cannot hold objects on PHP 7.4.
+     *
+     * @return non-empty-list<ChannelInterface>
      */
-    public const DEFAULT_SKIP_CHANNELS = [
-        Channel::Hidden,
-    ];
+    public static function getDefaultSkipChannels(): array
+    {
+        return [Channel::Hidden()];
+    }
 
     /**
      * Reads everything this lexer recognizes on its own.
@@ -65,7 +68,7 @@ class Lexer implements LexerInterface
      * @param array<int, non-empty-string> $names
      * @param array<int, LexerInterface|null> $transitions
      * @param array<int, int<1, max>> $subgroups
-     * @param iterable<mixed, ChannelInterface> $skip
+     * @param iterable<mixed, ChannelInterface>|null $skip
      */
     public function __construct(
         /**
@@ -152,9 +155,9 @@ class Lexer implements LexerInterface
          * goes on exactly as it would otherwise, and it is only left out of the
          * stream: nothing downstream ever sees it.
          */
-        iterable $skip = self::DEFAULT_SKIP_CHANNELS,
+        ?iterable $skip = null,
     ) {
-        $this->excluded = self::formatLexerSkippedTokens($skip);
+        $this->excluded = self::formatLexerSkippedTokens($skip ?? self::getDefaultSkipChannels());
         $this->transitions = $transitions;
 
         $this->tokenizer = new Tokenizer(
@@ -360,7 +363,7 @@ class Lexer implements LexerInterface
              * The terminal token only marks the end of the embedded lexer's
              * own fragment, so it is not carried over.
              */
-            if ($child->channel === Channel::EndOfInput) {
+            if ($child->channel === Channel::EndOfInput()) {
                 $end = $child->offset;
 
                 break;

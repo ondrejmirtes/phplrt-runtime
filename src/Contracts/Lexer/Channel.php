@@ -5,46 +5,71 @@ declare(strict_types=1);
 namespace Phplrt\Contracts\Lexer;
 
 /**
- * The basic set of the token channels.
+ * The channels built into the lexer.
  *
- * An implementation MAY mark a token with a channel of its own, which MUST
- * NOT be a member of this set.
+ * Note: Upstream this is an enum. This fork supports PHP 7.4, so every case
+ *       is a singleton returned by a static method of the same name, and the
+ *       instances may be compared with "===" the same way enum cases are.
  */
-enum Channel implements ChannelInterface
+final class Channel implements ChannelInterface
 {
-    /**
-     * The channel of the significant tokens.
-     */
-    case Default;
+    private const CASES = ['Default', 'Hidden', 'Unknown', 'EndOfInput'];
 
     /**
-     * The channel of the tokens that MUST be ignored.
+     * @var array<non-empty-string, self>
      */
-    case Hidden;
+    private static array $instances = [];
 
     /**
-     * The channel of the tokens that have not been recognized.
+     * @var non-empty-string
+     * @readonly
      */
-    case Unknown;
+    public string $name;
 
     /**
-     * The channel of the terminal token.
-     *
-     * A stream MUST contain at most one token of this channel.
+     * @param non-empty-string $name
      */
-    case EndOfInput;
+    private function __construct(string $name)
+    {
+        $this->name = $name;
+    }
+
+    public static function Default(): self
+    {
+        return self::$instances['Default'] ??= new self('Default');
+    }
+
+    public static function Hidden(): self
+    {
+        return self::$instances['Hidden'] ??= new self('Hidden');
+    }
+
+    public static function Unknown(): self
+    {
+        return self::$instances['Unknown'] ??= new self('Unknown');
+    }
+
+    public static function EndOfInput(): self
+    {
+        return self::$instances['EndOfInput'] ??= new self('EndOfInput');
+    }
 
     /**
-     * The channel of the significant tokens.
-     *
-     * @var self
+     * @return list<self>
      */
-    public const DEFAULT = self::Default;
+    public static function cases(): array
+    {
+        $result = [];
+
+        foreach (self::CASES as $case) {
+            $result[] = self::$case();
+        }
+
+        return $result;
+    }
 
     /**
-     * Returns every channel of this set, indexed by its own name.
-     *
-     * @return non-empty-array<non-empty-string, Channel>
+     * @return array<non-empty-string, self>
      */
     public static function names(): array
     {

@@ -14,7 +14,11 @@ namespace Phplrt\Parser\Exception;
  * unexpected {token} on line {line}, a {{name}} is expected
  * ```
  */
-enum MessagePlaceholder: string
+/**
+ * Note: Upstream this is a string-backed enum. This fork supports PHP 7.4,
+ *       so the cases are string constants of the same names.
+ */
+final class MessagePlaceholder
 {
     /**
      * Recognizes a placeholder of a message along with the pair of braces
@@ -31,45 +35,45 @@ enum MessagePlaceholder: string
      * The token the reading has broken on, along with everything known about
      * it.
      */
-    case Token = 'token';
+    public const Token = 'token';
 
     /**
      * The name of the token the reading has broken on, or its identifier in
      * case of an anonymous one.
      */
-    case Name = 'name';
+    public const Name = 'name';
 
     /**
      * The text the token the reading has broken on is read from.
      */
-    case Value = 'value';
+    public const Value = 'value';
 
     /**
      * The offset in bytes from the beginning of the source the reading has
      * broken at.
      */
-    case Offset = 'offset';
+    public const Offset = 'offset';
 
     /**
      * The number of the source line the reading has broken on.
      */
-    case Line = 'line';
+    public const Line = 'line';
 
     /**
      * The number of the column within its own line the reading has broken at.
      */
-    case Column = 'column';
+    public const Column = 'column';
 
     /**
      * The first few names of the tokens that could have been read instead,
      * along with the number of the ones left out.
      */
-    case Expected = 'expected';
+    public const Expected = 'expected';
 
     /**
      * The names of every token that could have been read instead.
      */
-    case ExpectedList = 'expected_list';
+    public const ExpectedList = 'expected_list';
 
     /**
      * Returns every placeholder the way it is written in a message.
@@ -78,6 +82,23 @@ enum MessagePlaceholder: string
      */
     public static function names(): array
     {
-        return \array_column(self::cases(), 'value');
+        return [
+            self::Token,
+            self::Name,
+            self::Value,
+            self::Offset,
+            self::Line,
+            self::Column,
+            self::Expected,
+            self::ExpectedList,
+        ];
+    }
+
+    /**
+     * @return non-empty-string|null
+     */
+    public static function tryFrom(string $name): ?string
+    {
+        return \in_array($name, self::names(), true) ? $name : null;
     }
 }

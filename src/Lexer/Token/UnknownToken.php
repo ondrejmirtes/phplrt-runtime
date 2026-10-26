@@ -22,7 +22,7 @@ final class UnknownToken extends Token
         parent::__construct(
             id: self::TOKEN_ID,
             name: null,
-            channel: Channel::Unknown,
+            channel: Channel::Unknown(),
             value: $value,
             offset: $offset,
         );

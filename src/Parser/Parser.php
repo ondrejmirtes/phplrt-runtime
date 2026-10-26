@@ -163,7 +163,7 @@ class Parser implements ParserInterface
      * by the class of the result, and what stands in the way by the error it
      * carries.
      *
-     * @return ($mode is Mode::Tolerant
+     * @return ($mode is Mode::Tolerant|null
      *      ? (SuccessfulResult<TResult>|FailureResult)
      *      : (SuccessfulResult<null>|FailureResult))
      * @throws ParserSourceException in case of the source cannot be read
@@ -171,8 +171,9 @@ class Parser implements ParserInterface
      *         into tokens
      * @throws ParserException in case of the lexer fails for any other reason
      */
-    public function analyze(ReadableInterface $source, Mode $mode = Mode::Tolerant): SuccessfulResult|FailureResult
+    public function analyze(ReadableInterface $source, ?Mode $mode = null): SuccessfulResult|FailureResult
     {
+        $mode ??= Mode::Tolerant();
         $result = $this->trace($source);
 
         if (!$result instanceof FailureTracingResult) {
@@ -209,7 +210,7 @@ class Parser implements ParserInterface
             throw $this->createException($source, $result);
         }
 
-        return $this->reduce($source, $result, Mode::Tolerant);
+        return $this->reduce($source, $result, Mode::Tolerant());
     }
 
     /**
@@ -217,7 +218,7 @@ class Parser implements ParserInterface
      */
     private function reduce(ReadableInterface $source, TracingResult $result, Mode $mode): mixed
     {
-        if ($mode === Mode::SyntaxCheck) {
+        if ($mode === Mode::SyntaxCheck()) {
             return null;
         }
 

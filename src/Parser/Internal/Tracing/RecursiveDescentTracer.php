@@ -184,7 +184,7 @@ final class RecursiveDescentTracer
                 $current = $this->skipTrailing();
             }
 
-            if ($isMatched && $current->channel === Channel::EndOfInput) {
+            if ($isMatched && $current->channel === Channel::EndOfInput()) {
                 return new SuccessfulTracingResult($this->entries, $this->length);
             }
 

@@ -34,7 +34,7 @@ final class TokenPrototypeLoader
         $result = [];
 
         foreach ($names as $id => $name) {
-            $result[$id] = self::createPrototype($id, $name, $instances[$id] ?? Channel::DEFAULT);
+            $result[$id] = self::createPrototype($id, $name, $instances[$id] ?? Channel::Default());
         }
 
         // A token may be given a channel but no name at all, and it's still a
@@ -52,7 +52,7 @@ final class TokenPrototypeLoader
      */
     public static function createFallbackPrototype(): Token
     {
-        return self::createPrototype(0, null, Channel::DEFAULT);
+        return self::createPrototype(0, null, Channel::Default());
     }
 
     /**
