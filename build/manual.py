@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Manual PHP 7.4 downgrades that Rector cannot do. Run from the fork root.
-import glob, re, shutil, sys
+import glob, re, shutil, subprocess, sys
 
 here = sys.argv[1]
 
@@ -129,3 +129,15 @@ ed(p, """        /** @var PrettyTokenPrinter $printer */
         static $printer = null;
         $printer ??= new PrettyTokenPrinter();
 """)
+
+# Not a downgrade: optimisations of the recursive descent interpreter, measured
+# on the PHPDoc grammar of phpstan/phpdoc-parser and on the regex grammar of
+# phpstan/phpstan-src (about 6% fewer instructions, identical results):
+#  - the parser reads the tokens of the buffer in place instead of calling
+#    ArrayBuffer::next() and ::seek();
+#  - an alternation that leaves nothing behind and is predicted to read a
+#    single production is read as that production, without a call;
+#  - the terminals a sequence cannot go without are read in place;
+#  - TraceReducer::merge() is written into the reduction loop.
+# The patch is written against the upstream sources, before Rector runs.
+subprocess.run(['git', 'apply', f'{here}/interpreter.patch'], check=True)

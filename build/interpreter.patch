@@ -1,0 +1,386 @@
+diff --git a/src/Parser/Internal/Buffer/ArrayBuffer.php b/src/Parser/Internal/Buffer/ArrayBuffer.php
+index eebce3b..71155be 100644
+--- a/src/Parser/Internal/Buffer/ArrayBuffer.php
++++ b/src/Parser/Internal/Buffer/ArrayBuffer.php
+@@ -22,14 +22,14 @@ final class ArrayBuffer implements BufferInterface
+     /**
+      * @var non-empty-list<TToken>
+      */
+-    private readonly array $tokens;
++    public readonly array $tokens;
+ 
+     /**
+      * The position of the terminal token, i.e. where the cursor stops.
+      *
+      * @var int<0, max>
+      */
+-    private readonly int $lastIndex;
++    public readonly int $lastIndex;
+ 
+     /**
+      * @var TToken
+diff --git a/src/Parser/Internal/Reduction/TraceReducer.php b/src/Parser/Internal/Reduction/TraceReducer.php
+index 9ba6a0b..38f790b 100644
+--- a/src/Parser/Internal/Reduction/TraceReducer.php
++++ b/src/Parser/Internal/Reduction/TraceReducer.php
+@@ -173,11 +173,31 @@ final class TraceReducer
+             $begin = $begins[--$depth] ?? $first;
+             $start = $starts[$depth];
+ 
+-            $result = $merged[$rule]
+-                ? self::merge($values, $start, $size)
++            if ($merged[$rule]) {
++                // A sequence is built out of the values of all its children,
++                // the ones of a nested sequence among them
++                // Note: Written in place rather than as a method of its own,
++                //       since it is done once per sequence of the tree.
++                $result = [];
++
++                for ($j = $start; $j < $size; ++$j) {
++                    $value = $values[$j];
++
++                    if (!\is_array($value)) {
++                        $result[] = $value;
++
++                        continue;
++                    }
++
++                    foreach ($value as $nested) {
++                        $result[] = $nested;
++                    }
++                }
++            } else {
+                 // Any other rule contains a single value, which is passed
+                 // through as is
+-                : ($size > $start ? $values[$start] : []);
++                $result = $size > $start ? $values[$start] : [];
++            }
+ 
+             $size = $start;
+             $reducer = $reducers[$rule] ?? null;
+@@ -201,32 +221,4 @@ final class TraceReducer
+ 
+         return $values[0] ?? [];
+     }
+-
+-    /**
+-     * Returns the values of a sequence as a single list, the ones of a nested
+-     * sequence among them.
+-     *
+-     * @param array<int, mixed> $values
+-     * @return list<mixed>
+-     */
+-    private static function merge(array $values, int $from, int $to): array
+-    {
+-        $result = [];
+-
+-        for ($i = $from; $i < $to; ++$i) {
+-            $value = $values[$i];
+-
+-            if (!\is_array($value)) {
+-                $result[] = $value;
+-
+-                continue;
+-            }
+-
+-            foreach ($value as $nested) {
+-                $result[] = $nested;
+-            }
+-        }
+-
+-        return $result;
+-    }
+ }
+diff --git a/src/Parser/Internal/Tracing/RecursiveDescentTracer.php b/src/Parser/Internal/Tracing/RecursiveDescentTracer.php
+index 47b3fc7..ac422b3 100644
+--- a/src/Parser/Internal/Tracing/RecursiveDescentTracer.php
++++ b/src/Parser/Internal/Tracing/RecursiveDescentTracer.php
+@@ -14,7 +14,7 @@ use Phplrt\Parser\Grammar\Optional;
+ use Phplrt\Parser\Grammar\Predicate;
+ use Phplrt\Parser\Grammar\Repetition;
+ use Phplrt\Parser\Grammar\RuleInterface;
+-use Phplrt\Parser\Internal\Buffer\BufferInterface;
++use Phplrt\Parser\Internal\Buffer\ArrayBuffer;
+ use Phplrt\Parser\Internal\Tracing\Result\FailureTracingResult;
+ use Phplrt\Parser\Internal\Tracing\Result\SuccessfulTracingResult;
+ 
+@@ -45,11 +45,16 @@ use Phplrt\Parser\Internal\Tracing\Result\SuccessfulTracingResult;
+  * @phpstan-type MessageTableType array<int, non-empty-string>
+  * @phpstan-type KeptTableType array<int, bool>
+  * @phpstan-type StartPredictionTableType array<int, array<int, true>|null>
+- * @phpstan-type ChoicePredictionTableType array<int, array<int, list<int>>>
++ * @phpstan-type ChoicePredictionTableType array<int, array<int, list<int>|int>>
+  * @phpstan-type SequencePredictionTableType array<int, list<int>>
+  */
+ final class RecursiveDescentTracer
+ {
++    /**
++     * Added to the identifier of a terminal a sequence reads in place.
++     */
++    private const TERMINAL = 1 << 30;
++
+     /**
+      * The trace of the reading: rule identifiers on entering, tokens read,
+      * negated rule identifiers on leaving.
+@@ -83,7 +88,7 @@ final class RecursiveDescentTracer
+     /**
+      * The tokens of the source the trace is being written for.
+      */
+-    private BufferInterface $buffer;
++    private ArrayBuffer $buffer;
+ 
+     /**
+      * What has stood in the way of that reading.
+@@ -118,17 +123,24 @@ final class RecursiveDescentTracer
+          * reading is at. A negated identifier names a terminal reading that
+          * very token.
+          *
++         * Note: Not readonly in this fork: an alternation predicted to read a
++         *       single production is replaced by that production's identifier
++         *       below, which is read without a call.
++         *
+          * @var ChoicePredictionTableType
+          */
+-        private readonly array $choicePrediction = [],
++        private array $choicePrediction = [],
+         /**
+          * The elements of the sequences read in place. A negated identifier
+          * names either the rule an optional element wraps or a negative
+          * predicate.
+          *
++         * Note: Not readonly in this fork: the terminals a sequence cannot go
++         *       without are marked below, to be read in place.
++         *
+          * @var SequencePredictionTableType
+          */
+-        private readonly array $sequencePrediction = [],
++        private array $sequencePrediction = [],
+     ) {
+         // A rule that leaves nothing behind is not written into the trace at
+         // all, which is fewer entries to reduce afterward. A grammar that has
+@@ -138,6 +150,37 @@ final class RecursiveDescentTracer
+             ? \array_fill_keys(\array_keys($grammar), true)
+             : $kept;
+ 
++        // An alternation that leaves nothing behind and is predicted to read
++        // a single production is read as that production, without a call
++        foreach ($this->choicePrediction as $rule => $byToken) {
++            if (($this->kept[$rule] ?? true) || isset($this->messages[$rule])) {
++                continue;
++            }
++
++            foreach ($byToken as $tokenId => $alternatives) {
++                if (\count($alternatives) === 1 && $alternatives[0] >= 0 && !isset($this->messages[$alternatives[0]])) {
++                    $this->choicePrediction[$rule][$tokenId] = $alternatives[0];
++                }
++            }
++        }
++
++        // The terminals a sequence cannot go without are read in place
++        foreach ($grammar as $rule => $definition) {
++            if (!$definition instanceof Concatenation) {
++                continue;
++            }
++
++            $elements = $this->sequencePrediction[$rule] ?? $definition->ruleIds;
++
++            foreach ($elements as $i => $inner) {
++                if ($inner >= 0 && $grammar[$inner] instanceof Lexeme) {
++                    $elements[$i] = $inner + self::TERMINAL;
++                }
++            }
++
++            $this->sequencePrediction[$rule] = $elements;
++        }
++
+         // A grammar that has not been described is recognized all the same: it
+         // reads exactly the same sources, only slower, and its failures are
+         // reported deeper in the rules, since the rules alone do not say where
+@@ -158,7 +201,7 @@ final class RecursiveDescentTracer
+      *        starts at
+      */
+     public function trace(
+-        BufferInterface $buffer,
++        ArrayBuffer $buffer,
+         int $initial,
+     ): SuccessfulTracingResult|FailureTracingResult {
+         if ($this->grammar === []) {
+@@ -224,9 +267,11 @@ final class RecursiveDescentTracer
+     private function match(int $rule): bool
+     {
+         $buffer = $this->buffer;
+-        $definition = $this->grammar[$rule];
+         $token = $buffer->current;
+ 
++        start:
++        $definition = $this->grammar[$rule];
++
+         // --- A terminal reads the token the reading is at -------------------
+ 
+         if ($definition instanceof Lexeme) {
+@@ -255,7 +300,7 @@ final class RecursiveDescentTracer
+                 }
+             }
+ 
+-            $buffer->next();
++            if ($buffer->key < $buffer->lastIndex) { $buffer->current = $buffer->tokens[++$buffer->key]; }
+ 
+             return true;
+         }
+@@ -295,8 +340,40 @@ final class RecursiveDescentTracer
+         if ($definition instanceof Concatenation) {
+             foreach ($this->sequencePrediction[$rule] ?? $definition->ruleIds as $inner) {
+                 if ($inner >= 0) {
+-                    if ($this->match($inner)) {
+-                        continue;
++                    if ($inner < self::TERMINAL) {
++                        if ($this->match($inner)) {
++                            continue;
++                        }
++                    } else {
++                        // A terminal the sequence cannot go without is read
++                        // in place, the way it would have read itself
++                        $inner -= self::TERMINAL;
++
++                        /** @var Lexeme $element */
++                        $element = $this->grammar[$inner];
++                        $token = $buffer->current;
++
++                        if ($token->id === $element->tokenId
++                            || (!$token->channel instanceof Channel && ($token = $this->stepOver($element->tokenId)) !== null)
++                        ) {
++                            if ($element->keep) {
++                                if ($this->kept[$inner]) {
++                                    $this->recordTerminalNode($inner, $token);
++                                } else {
++                                    $this->entries[$this->length++] = $token;
++                                }
++                            }
++
++                            if ($buffer->key < $buffer->lastIndex) {
++                                $buffer->current = $buffer->tokens[++$buffer->key];
++                            }
++
++                            continue;
++                        }
++
++                        if ($buffer->key >= $this->error->furthest) {
++                            $this->error->record($inner);
++                        }
+                     }
+ 
+                     /**
+@@ -310,7 +387,7 @@ final class RecursiveDescentTracer
+                     }
+ 
+                     if ($buffer->key !== $origin) {
+-                        $buffer->seek($origin);
++                        $buffer->current = $buffer->tokens[$buffer->key = $origin];
+                     }
+ 
+                     $this->length = $mark;
+@@ -354,7 +431,7 @@ final class RecursiveDescentTracer
+                     }
+ 
+                     if ($buffer->key !== $origin) {
+-                        $buffer->seek($origin);
++                        $buffer->current = $buffer->tokens[$buffer->key = $origin];
+                     }
+ 
+                     $this->length = $mark;
+@@ -375,7 +452,7 @@ final class RecursiveDescentTracer
+                 $before = $buffer->key;
+ 
+                 if (!$this->match($inner) && $buffer->key !== $before) {
+-                    $buffer->seek($before);
++                    $buffer->current = $buffer->tokens[$buffer->key = $before];
+                 }
+             }
+ 
+@@ -391,6 +468,14 @@ final class RecursiveDescentTracer
+             $alternatives = $this->choicePrediction[$rule][$token->id]
+                 ?? $definition->ruleIds;
+ 
++            // An alternation that leaves nothing behind and is predicted to
++            // read a single production is that very production
++            if (\is_int($alternatives)) {
++                $rule = $alternatives;
++
++                goto start;
++            }
++
+             foreach ($alternatives as $inner) {
+                 if ($inner >= 0) {
+                     if ($this->match($inner)) {
+@@ -411,7 +496,7 @@ final class RecursiveDescentTracer
+                     // read nothing at all, so the reading is already where it
+                     // would be given back to
+                     if ($buffer->key !== $origin) {
+-                        $buffer->seek($origin);
++                        $buffer->current = $buffer->tokens[$buffer->key = $origin];
+                     }
+ 
+                     continue;
+@@ -432,7 +517,7 @@ final class RecursiveDescentTracer
+                     }
+                 }
+ 
+-                $buffer->next();
++                if ($buffer->key < $buffer->lastIndex) { $buffer->current = $buffer->tokens[++$buffer->key]; }
+ 
+                 if ($isKept) {
+                     $this->entries[$this->length++] = -$rule - 1;
+@@ -505,7 +590,7 @@ final class RecursiveDescentTracer
+ 
+             if ($matched < $definition->min) {
+                 if ($buffer->key !== $origin) {
+-                    $buffer->seek($origin);
++                    $buffer->current = $buffer->tokens[$buffer->key = $origin];
+                 }
+ 
+                 $this->length = $mark;
+@@ -516,7 +601,7 @@ final class RecursiveDescentTracer
+         // --- The rare kinds ------------------------------------------------
+         } elseif ($definition instanceof Optional) {
+             if (!$this->match($definition->ruleId) && $buffer->key !== $origin) {
+-                $buffer->seek($origin);
++                $buffer->current = $buffer->tokens[$buffer->key = $origin];
+             }
+         } elseif ($definition instanceof Predicate) {
+             $inner = $definition->ruleId;
+@@ -552,7 +637,7 @@ final class RecursiveDescentTracer
+                 $this->error = $report;
+ 
+                 if ($buffer->key !== $origin) {
+-                    $buffer->seek($origin);
++                    $buffer->current = $buffer->tokens[$buffer->key = $origin];
+                 }
+ 
+                 /**
+@@ -654,7 +739,7 @@ final class RecursiveDescentTracer
+         do {
+             $before = $buffer->key;
+ 
+-            $buffer->next();
++            if ($buffer->key < $buffer->lastIndex) { $buffer->current = $buffer->tokens[++$buffer->key]; }
+             // A stream ending with such a token has nothing left to step onto,
+             // and the cursor stays where it is
+         } while ($buffer->key !== $before && !$buffer->current->channel instanceof Channel);
+@@ -674,7 +759,7 @@ final class RecursiveDescentTracer
+         do {
+             $before = $buffer->key;
+ 
+-            $buffer->next();
++            if ($buffer->key < $buffer->lastIndex) { $buffer->current = $buffer->tokens[++$buffer->key]; }
+ 
+             $token = $buffer->current;
+ 
+@@ -683,7 +768,7 @@ final class RecursiveDescentTracer
+             }
+         } while ($buffer->key !== $before && !$token->channel instanceof Channel);
+ 
+-        $buffer->seek($rollback);
++        $buffer->current = $buffer->tokens[$buffer->key = $rollback];
+ 
+         return null;
+     }

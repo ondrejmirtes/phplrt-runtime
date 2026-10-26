@@ -23,7 +23,7 @@ final class ArrayBuffer implements BufferInterface
      * @var non-empty-list<TToken>
      * @readonly
      */
-    private array $tokens;
+    public array $tokens;
 
     /**
      * The position of the terminal token, i.e. where the cursor stops.
@@ -31,7 +31,7 @@ final class ArrayBuffer implements BufferInterface
      * @var int<0, max>
      * @readonly
      */
-    private int $lastIndex;
+    public int $lastIndex;
 
     /**
      * @var TToken

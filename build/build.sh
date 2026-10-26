@@ -20,7 +20,7 @@ cp "$HERE/composer.json" .
 git init -q -b main
 git add -A && git -c user.name="Ondrej Mirtes" -c user.email=ondrej@mirtes.cz commit -qm "phplrt runtime $VERSION sources (lexer, parser, source, position and their contracts)"
 python3 "$HERE/manual.py" "$HERE"
-git add -A && git -c user.name="Ondrej Mirtes" -c user.email=ondrej@mirtes.cz commit -qm "Manual downgrade to PHP 7.4 (enums, WeakMap, new in static initializer)"
+git add -A && git -c user.name="Ondrej Mirtes" -c user.email=ondrej@mirtes.cz commit -qm "Manual downgrade to PHP 7.4 (enums, WeakMap, new in static initializer) and interpreter optimisations"
 sed "s#/tmp/fork/repo#$OUT#" "$HERE/rector.php" > /tmp/forkbuild-rector.php
 cat > /tmp/forkbuild-autoload.php <<PHP
 <?php spl_autoload_register(function (\$c) { if (strncmp(\$c, 'Phplrt\\\\', 7) === 0) { \$f = '$OUT/src/' . str_replace('\\\\', '/', substr(\$c, 7)) . '.php'; if (is_file(\$f)) require \$f; } });
@@ -29,7 +29,7 @@ PHP
 git add -A && git -c user.name="Ondrej Mirtes" -c user.email=ondrej@mirtes.cz commit -qm "Downgrade to PHP 7.4 with Rector (DowngradeLevelSetList::DOWN_TO_PHP_74)"
 for f in $(find src -name '*.php'); do php7.4 -l "$f" > /dev/null; done
 mkdir -p build/tools
-cp "$HERE"/{build.sh,manual.py,Channel.php,Mode.php,rector.php,composer.json} build/
+cp "$HERE"/{build.sh,manual.py,interpreter.patch,Channel.php,Mode.php,rector.php,composer.json} build/
 cp "$HERE/tools/composer.json" "$HERE/tools/composer.lock" build/tools/
 cp "$HERE/README.md" .
 printf '/build/tools/vendor\n' > .gitignore; printf '/build export-ignore\n' > .gitattributes

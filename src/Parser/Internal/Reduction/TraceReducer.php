@@ -180,11 +180,31 @@ final class TraceReducer
             $begin = $begins[--$depth] ?? $first;
             $start = $starts[$depth];
 
-            $result = $merged[$rule]
-                ? self::merge($values, $start, $size)
+            if ($merged[$rule]) {
+                // A sequence is built out of the values of all its children,
+                // the ones of a nested sequence among them
+                // Note: Written in place rather than as a method of its own,
+                //       since it is done once per sequence of the tree.
+                $result = [];
+
+                for ($j = $start; $j < $size; ++$j) {
+                    $value = $values[$j];
+
+                    if (!\is_array($value)) {
+                        $result[] = $value;
+
+                        continue;
+                    }
+
+                    foreach ($value as $nested) {
+                        $result[] = $nested;
+                    }
+                }
+            } else {
                 // Any other rule contains a single value, which is passed
                 // through as is
-                : ($size > $start ? $values[$start] : []);
+                $result = $size > $start ? $values[$start] : [];
+            }
 
             $size = $start;
             $reducer = $reducers[$rule] ?? null;
@@ -207,33 +227,5 @@ final class TraceReducer
         }
 
         return $values[0] ?? [];
-    }
-
-    /**
-     * Returns the values of a sequence as a single list, the ones of a nested
-     * sequence among them.
-     *
-     * @param array<int, mixed> $values
-     * @return list<mixed>
-     */
-    private static function merge(array $values, int $from, int $to): array
-    {
-        $result = [];
-
-        for ($i = $from; $i < $to; ++$i) {
-            $value = $values[$i];
-
-            if (!\is_array($value)) {
-                $result[] = $value;
-
-                continue;
-            }
-
-            foreach ($value as $nested) {
-                $result[] = $nested;
-            }
-        }
-
-        return $result;
     }
 }

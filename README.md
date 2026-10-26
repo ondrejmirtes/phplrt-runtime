@@ -24,8 +24,12 @@ which creates these commits:
 1. the upstream sources, copied verbatim,
 2. manual changes Rector cannot do (`build/manual.py`): enums become
    singleton classes (`Channel::Hidden()`) and string constants,
-   `WeakMap` becomes `SplObjectStorage`, and so on,
+   `WeakMap` becomes `SplObjectStorage`, and so on. It also applies
+   `build/interpreter.patch`, which makes the recursive descent interpreter
+   faster without changing what it reads,
 3. `DowngradeLevelSetList::DOWN_TO_PHP_74` applied by Rector,
 4. this build tooling.
 
-Versions follow upstream with a fourth number: `4.2.4.0` is upstream `4.2.4`.
+Versions follow upstream with a fourth number: `4.2.4.0` is upstream `4.2.4`. The fourth number grows
+when the fork itself changes: `4.2.4.1` is upstream `4.2.4` with the
+interpreter patch.
