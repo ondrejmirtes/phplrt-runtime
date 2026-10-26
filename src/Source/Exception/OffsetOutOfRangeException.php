@@ -18,9 +18,6 @@ final class OffsetOutOfRangeException extends InvalidArgumentException
         $message = 'Offset must be less than or equal to %d for a source beginning '
             . 'at the position %d of the stream, but %d given';
 
-        return new self(
-            \sprintf($message, \PHP_INT_MAX - $initial, $initial, $offset),
-            previous: $prev,
-        );
+        return new self(\sprintf($message, \PHP_INT_MAX - $initial, $initial, $offset), 0, $prev);
     }
 }

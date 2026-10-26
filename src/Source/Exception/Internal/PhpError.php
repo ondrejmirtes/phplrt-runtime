@@ -32,16 +32,16 @@ final class PhpError
     public static function toThrowable(?array $error, ?\Throwable $previous = null): \Exception
     {
         if ($error === null) {
-            return new \RuntimeException(self::DEFAULT_MESSAGE, previous: $previous);
+            return new \RuntimeException(self::DEFAULT_MESSAGE, 0, $previous);
         }
 
         return new \ErrorException(
-            message: $error['message'] === '' ? self::DEFAULT_MESSAGE : $error['message'],
-            code: 0,
-            severity: $error['type'],
-            filename: $error['file'],
-            line: $error['line'],
-            previous: $previous,
+            $error['message'] === '' ? self::DEFAULT_MESSAGE : $error['message'],
+            0,
+            $error['type'],
+            $error['file'],
+            $error['line'],
+            $previous,
         );
     }
 }

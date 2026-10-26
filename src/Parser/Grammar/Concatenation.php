@@ -39,10 +39,15 @@ namespace Phplrt\Parser\Grammar;
  */
 final class Concatenation implements SequenceInterface
 {
-    public function __construct(
+    /**
+     * @readonly
+     */
+    public array $ruleIds;
+    public function __construct(array $ruleIds)
+    {
         /**
          * @var non-empty-list<int>
          */
-        public readonly array $ruleIds,
-    ) {}
+        $this->ruleIds = $ruleIds;
+    }
 }

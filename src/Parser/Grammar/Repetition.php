@@ -41,17 +41,36 @@ namespace Phplrt\Parser\Grammar;
  */
 final class Repetition implements SequenceInterface
 {
+    /**
+     * @readonly
+     */
+    public int $ruleId;
+    /**
+     * @readonly
+     */
+    public int $min = 0;
+    /**
+     * @readonly
+     * @var int|float
+     */
+    public $max = \INF;
+    /**
+     * @param int|float $max
+     */
     public function __construct(
-        public readonly int $ruleId,
+        int $ruleId,
+        int $min = 0,
+        $max = \INF
+    ) {
+        $this->ruleId = $ruleId;
         /**
          * @var int<0, max>
          */
-        public readonly int $min = 0,
+        $this->min = $min;
         /**
          * @var int<0, max>|float
          */
-        public readonly int|float $max = \INF,
-    ) {
+        $this->max = $max;
         \assert($max >= $min, 'Max repetitions count must be greater or equal than min repetitions');
         \assert(\is_int($max) || \is_infinite($max), 'Max repetitions may contain only integer or INF (float) values');
     }

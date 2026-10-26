@@ -49,15 +49,33 @@ use Phplrt\Parser\Internal\Tracing\Result\TracingResult;
 class Parser implements ParserInterface
 {
     /**
-     * Recognizes a source against the grammar.
+     * @readonly
      */
-    private readonly RecursiveDescentTracer $tracer;
+    private LexerInterface $lexer;
+    /**
+     * @readonly
+     */
+    private array $grammar;
+    /**
+     * @readonly
+     */
+    private array $expectations = [];
+    /**
+     * @readonly
+     */
+    private array $messages = [];
+    /**
+     * Recognizes a source against the grammar.
+     * @readonly
+     */
+    private RecursiveDescentTracer $tracer;
 
     /**
      * Builds what has been recognized into the values the grammar
      * describes.
+     * @readonly
      */
-    private readonly TraceReducer $reducer;
+    private TraceReducer $reducer;
 
     /**
      * The identifier of the rule the analysis starts at.
@@ -88,49 +106,53 @@ class Parser implements ParserInterface
      *        {@see $startPrediction}. Please do not use it anymore.
      */
     public function __construct(
-        private readonly LexerInterface $lexer,
+        LexerInterface $lexer,
+        array $grammar,
+        int $initial,
+        array $reducers = [],
+        array $expectations = [],
+        array $messages = [],
+        array $kept = [],
+        array $startPrediction = [],
+        array $choicePrediction = [],
+        array $sequencePrediction = [],
+        ?array $lookahead = null
+    ) {
+        $this->lexer = $lexer;
         /**
          * The rules the reading is described by.
          *
          * @var list<RuleInterface>
          */
-        private readonly array $grammar,
-        int $initial,
-        array $reducers = [],
+        $this->grammar = $grammar;
         /**
          * The way an error has to name each token: by its name, or by what an
          * anonymous one is recognized by
          *
          * @var ExpectationsTableType
          */
-        private readonly array $expectations = [],
+        $this->expectations = $expectations;
         /**
          * The message describing the failure of a rule, indexed by the
          * rule identifiers
          *
          * @var MessageTableType
          */
-        private readonly array $messages = [],
-        array $kept = [],
-        array $startPrediction = [],
-        array $choicePrediction = [],
-        array $sequencePrediction = [],
-        ?array $lookahead = null,
-    ) {
+        $this->messages = $messages;
         $this->initial = $initial;
 
         $this->tracer = new RecursiveDescentTracer(
-            grammar: $grammar,
-            messages: $messages,
-            kept: $kept,
-            startPrediction: $lookahead ?? $startPrediction,
-            choicePrediction: $choicePrediction,
-            sequencePrediction: $sequencePrediction,
+            $grammar,
+            $messages,
+            $kept,
+            $lookahead ?? $startPrediction,
+            $choicePrediction,
+            $sequencePrediction,
         );
 
         $this->reducer = new TraceReducer(
-            grammar: $grammar,
-            reducers: $reducers,
+            $grammar,
+            $reducers,
         );
     }
 
@@ -142,8 +164,9 @@ class Parser implements ParserInterface
      * @param int<0, max> $rule
      * @throws UnknownInitialRuleException in case of the analysis may not be
      *         started at the given rule
+     * @return static
      */
-    public function withInitial(int $rule): static
+    public function withInitial(int $rule)
     {
         if (!isset($this->grammar[$rule])) {
             throw UnknownInitialRuleException::becauseRuleIsNotDefined($rule);
@@ -171,7 +194,7 @@ class Parser implements ParserInterface
      *         into tokens
      * @throws ParserException in case of the lexer fails for any other reason
      */
-    public function analyze(ReadableInterface $source, ?Mode $mode = null): SuccessfulResult|FailureResult
+    public function analyze(ReadableInterface $source, ?Mode $mode = null)
     {
         $mode ??= Mode::Tolerant();
         $result = $this->trace($source);
@@ -179,7 +202,7 @@ class Parser implements ParserInterface
         if (!$result instanceof FailureTracingResult) {
             /** @var SuccessfulResult<TResult>|SuccessfulResult<null> */
             return new SuccessfulResult(
-                value: $this->reduce($source, $result, $mode),
+                $this->reduce($source, $result, $mode),
             );
         }
 
@@ -189,20 +212,23 @@ class Parser implements ParserInterface
         // no fragment to report, and the source is only described by the error
         if ($result->length === 0) {
             return new FailureResult(
-                token: $result->token ?? $result->stoppedAt,
-                error: $error,
+                $result->token ?? $result->stoppedAt,
+                $error,
             );
         }
 
         /** @var PartialResult<TResult>|PartialResult<null> */
         return new PartialResult(
-            value: $this->reduce($source, $result, $mode),
-            token: $result->stoppedAt,
-            error: $error,
+            $this->reduce($source, $result, $mode),
+            $result->stoppedAt,
+            $error,
         );
     }
 
-    public function parse(ReadableInterface $source): mixed
+    /**
+     * @return mixed
+     */
+    public function parse(ReadableInterface $source)
     {
         $result = $this->trace($source);
 
@@ -216,7 +242,7 @@ class Parser implements ParserInterface
     /**
      * @return ($mode is Mode::SyntaxCheck ? null : TResult)
      */
-    private function reduce(ReadableInterface $source, TracingResult $result, Mode $mode): mixed
+    private function reduce(ReadableInterface $source, TracingResult $result, Mode $mode)
     {
         if ($mode === Mode::SyntaxCheck()) {
             return null;
@@ -256,23 +282,26 @@ class Parser implements ParserInterface
         // the tokens that could have been read instead
         if ($rule === null || $message === null) {
             return UnexpectedTokenException::becauseUnexpectedTokenProduced(
-                source: $source,
-                token: $token,
-                expected: $expected,
+                $source,
+                $token,
+                $expected,
             );
         }
 
         return UnexpectedTokenException::becauseGrammarDescribesTheError(
-            source: $source,
-            token: $token,
-            message: (new MessageInterpolator())
+            $source,
+            $token,
+            (new MessageInterpolator())
                 ->interpolate($message, $source, $token, $expected),
-            expected: $expected,
-            rule: $rule,
+            $expected,
+            $rule,
         );
     }
 
-    private function trace(ReadableInterface $source): SuccessfulTracingResult|FailureTracingResult
+    /**
+     * @return \Phplrt\Parser\Internal\Tracing\Result\SuccessfulTracingResult|\Phplrt\Parser\Internal\Tracing\Result\FailureTracingResult
+     */
+    private function trace(ReadableInterface $source)
     {
         $buffer = $this->lex($source);
 
@@ -304,7 +333,7 @@ class Parser implements ParserInterface
                 throw ParserSourceException::becauseSourceIsNotReadable($previous);
             }
 
-            throw new ParserException($e->getMessage(), previous: $e);
+            throw new ParserException($e->getMessage(), 0, $e);
         }
     }
 }

@@ -20,8 +20,9 @@ final class SourceFactory implements SourceFactoryInterface
 {
     /**
      * @var list<SourceDriverInterface>
+     * @readonly
      */
-    private readonly array $drivers;
+    private array $drivers;
 
     /**
      * @param iterable<mixed, SourceDriverInterface> $drivers drivers are
@@ -30,11 +31,33 @@ final class SourceFactory implements SourceFactoryInterface
      */
     public function __construct(iterable $drivers = [])
     {
-        $this->drivers = match (true) {
-            $drivers instanceof \Traversable => \iterator_to_array($drivers, false),
-            \array_is_list($drivers) => $drivers,
-            default => \array_values($drivers),
+        $arrayIsListFunction = function (array $array): bool {
+            if (function_exists('array_is_list')) {
+                return array_is_list($array);
+            }
+            if ($array === []) {
+                return true;
+            }
+            $current_key = 0;
+            foreach ($array as $key => $noop) {
+                if ($key !== $current_key) {
+                    return false;
+                }
+                ++$current_key;
+            }
+            return true;
         };
+        switch (true) {
+            case $drivers instanceof \Traversable:
+                $this->drivers = \iterator_to_array($drivers, false);
+                break;
+            case $arrayIsListFunction($drivers):
+                $this->drivers = $drivers;
+                break;
+            default:
+                $this->drivers = \array_values($drivers);
+                break;
+        }
     }
 
     /**
@@ -68,13 +91,13 @@ final class SourceFactory implements SourceFactoryInterface
      * @api
      *
      * @template TArgSource
-     * @param TArgSource $source
+     * @param mixed $source
      * @return (TArgSource is ReadableInterface ? TArgSource&ReadableInterface : ReadableInterface)
      * @throws NotCreatableException in case none of the drivers recognizes
      *         the source argument
      * @throws SourceExceptionInterface in case of source creation exception occurs
      */
-    public function create(mixed $source): ReadableInterface
+    public function create($source): ReadableInterface
     {
         if ($source instanceof ReadableInterface) {
             return $source;

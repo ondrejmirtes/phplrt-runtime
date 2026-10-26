@@ -26,6 +26,18 @@ use Phplrt\Parser\Internal\Tracing\Result\FailureTracingResult;
 final class ErrorReport
 {
     /**
+     * @readonly
+     */
+    private BufferInterface $buffer;
+    /**
+     * @readonly
+     */
+    private array $grammar;
+    /**
+     * @readonly
+     */
+    private array $startPrediction;
+    /**
      * How many of the rules failing at the same position are remembered.
      *
      * A rule rejected before it is entered is rejected by the tokens it may
@@ -80,17 +92,18 @@ final class ErrorReport
      */
     private ?int $initial = null;
 
-    public function __construct(
-        private readonly BufferInterface $buffer,
+    public function __construct(BufferInterface $buffer, array $grammar, array $startPrediction)
+    {
+        $this->buffer = $buffer;
         /**
          * @var list<RuleInterface>
          */
-        private readonly array $grammar,
+        $this->grammar = $grammar;
         /**
          * @var StartPredictionTableType
          */
-        private readonly array $startPrediction,
-    ) {}
+        $this->startPrediction = $startPrediction;
+    }
 
     /**
      * Remembers that the given rule could not be recognized at the position the
@@ -201,22 +214,16 @@ final class ErrorReport
              * broke before the place the reading has stopped at, so what they
              * say is said about another failure than the one reported here.
              */
-            return new FailureTracingResult(
-                stoppedAt: $stoppedAt,
-                token: $buffer->current,
-                labelled: $this->initial,
-                entries: $entries,
-                length: $length,
-            );
+            return new FailureTracingResult($stoppedAt, $buffer->current, [], $this->initial, $entries, $length);
         }
 
         return new FailureTracingResult(
-            stoppedAt: $stoppedAt,
-            token: $this->token,
-            expected: $this->calculateExpectedTokens(),
-            labelled: $this->labelled ?? $this->initial,
-            entries: $entries,
-            length: $length,
+            $stoppedAt,
+            $this->token,
+            $this->calculateExpectedTokens(),
+            $this->labelled ?? $this->initial,
+            $entries,
+            $length,
         );
     }
 

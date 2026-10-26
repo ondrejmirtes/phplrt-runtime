@@ -18,11 +18,25 @@ use Phplrt\Contracts\Parser\Exception\RuntimeExceptionInterface;
  */
 final class FailureResult extends Result
 {
+    /**
+     * @readonly
+     */
+    public TokenInterface $token;
+    /**
+     * @var \Phplrt\Contracts\Parser\Exception\RuntimeExceptionInterface|\Closure
+     */
+    private $error;
+    /**
+     * @param \Phplrt\Contracts\Parser\Exception\RuntimeExceptionInterface|\Closure $error
+     */
     public function __construct(
+        TokenInterface $token,
+        $error
+    ) {
         /**
          * The token the grammar has stopped on.
          */
-        public readonly TokenInterface $token,
+        $this->token = $token;
         /**
          * The error, or the means of building it until it is asked about.
          *
@@ -34,12 +48,14 @@ final class FailureResult extends Result
          *
          * @phpstan-readonly-allow-private-mutation
          */
-        private RuntimeExceptionInterface|\Closure $error,
-    ) {
+        $this->error = $error;
         parent::__construct();
     }
 
-    public function __get(string $property): mixed
+    /**
+     * @return mixed
+     */
+    public function __get(string $property)
     {
         switch ($property) {
             case 'error':

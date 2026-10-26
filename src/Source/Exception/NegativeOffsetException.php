@@ -14,6 +14,6 @@ final class NegativeOffsetException extends InvalidArgumentException
     {
         $message = 'Offset must be greater than or equal to 0, but %d given';
 
-        return new self(\sprintf($message, $offset), previous: $prev);
+        return new self(\sprintf($message, $offset), 0, $prev);
     }
 }

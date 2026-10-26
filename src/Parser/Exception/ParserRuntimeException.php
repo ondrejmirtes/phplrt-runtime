@@ -12,27 +12,42 @@ use Phplrt\Exception\ErrorPrinter;
 abstract class ParserRuntimeException extends ParserException implements
     ParserRuntimeExceptionInterface
 {
+    /**
+     * @readonly
+     */
+    public ReadableInterface $source;
+    /**
+     * @readonly
+     */
+    public TokenInterface $token;
+    /**
+     * @readonly
+     */
+    public ?int $length = null;
     public function __construct(
+        ReadableInterface $source,
+        TokenInterface $token,
+        string $message,
+        ?int $length = null,
+        int $code = 0,
+        ?\Throwable $previous = null
+    ) {
         /**
          * The source the error occurred in.
          */
-        public readonly ReadableInterface $source,
-        public readonly TokenInterface $token,
-        string $message,
+        $this->source = $source;
+        $this->token = $token;
         /**
          * The size of the fragment the error occurred in, or {@see null} in
          * case of the error is as large as the token itself.
          *
          * @var int<0, max>|null
          */
-        public readonly ?int $length = null,
-        int $code = 0,
-        ?\Throwable $previous = null,
-    ) {
+        $this->length = $length;
         parent::__construct(
-            message: $message,
-            code: $code,
-            previous: $previous,
+            $message,
+            $code,
+            $previous,
         );
     }
 
@@ -41,7 +56,7 @@ abstract class ParserRuntimeException extends ParserException implements
         try {
             return (string) (new ErrorPrinter())
                 ->print($this);
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
             return parent::__toString();
         }
     }

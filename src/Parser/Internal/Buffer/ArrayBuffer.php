@@ -21,15 +21,17 @@ final class ArrayBuffer implements BufferInterface
 {
     /**
      * @var non-empty-list<TToken>
+     * @readonly
      */
-    private readonly array $tokens;
+    private array $tokens;
 
     /**
      * The position of the terminal token, i.e. where the cursor stops.
      *
      * @var int<0, max>
+     * @readonly
      */
-    private readonly int $lastIndex;
+    private int $lastIndex;
 
     /**
      * @var TToken
@@ -51,12 +53,33 @@ final class ArrayBuffer implements BufferInterface
      */
     public function __construct(iterable $tokens)
     {
-        $tokens = match (true) {
-            !\is_array($tokens) => \iterator_to_array($tokens, false),
-            \array_is_list($tokens) => $tokens,
-            default => \array_values($tokens),
+        $arrayIsListFunction = function (array $array): bool {
+            if (function_exists('array_is_list')) {
+                return array_is_list($array);
+            }
+            if ($array === []) {
+                return true;
+            }
+            $current_key = 0;
+            foreach ($array as $key => $noop) {
+                if ($key !== $current_key) {
+                    return false;
+                }
+                ++$current_key;
+            }
+            return true;
         };
-
+        switch (true) {
+            case !\is_array($tokens):
+                $tokens = \iterator_to_array($tokens, false);
+                break;
+            case $arrayIsListFunction($tokens):
+                $tokens = $tokens;
+                break;
+            default:
+                $tokens = \array_values($tokens);
+                break;
+        }
         if ($tokens === []) {
             throw new \OutOfRangeException('Buffer must contain at least one token');
         }

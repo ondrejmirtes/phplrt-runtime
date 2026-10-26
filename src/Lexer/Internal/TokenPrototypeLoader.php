@@ -61,10 +61,10 @@ final class TokenPrototypeLoader
     private static function createPrototype(int $id, ?string $name, ChannelInterface $channel): Token
     {
         return new Token(
-            id: $id,
-            name: $name,
-            channel: $channel,
-            value: '',
+            $id,
+            $name,
+            $channel,
+            '',
         );
     }
 }

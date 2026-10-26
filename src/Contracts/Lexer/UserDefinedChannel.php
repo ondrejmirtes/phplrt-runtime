@@ -11,12 +11,14 @@ namespace Phplrt\Contracts\Lexer;
  */
 class UserDefinedChannel implements ChannelInterface
 {
-    public function __construct(
+    public string $name;
+    public function __construct(string $name)
+    {
         /**
          * The name of the channel.
          *
          * @var non-empty-string
          */
-        public string $name,
-    ) {}
+        $this->name = $name;
+    }
 }

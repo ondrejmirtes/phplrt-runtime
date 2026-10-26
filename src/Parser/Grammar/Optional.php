@@ -38,7 +38,12 @@ namespace Phplrt\Parser\Grammar;
  */
 final class Optional implements ProductionInterface
 {
-    public function __construct(
-        public readonly int $ruleId,
-    ) {}
+    /**
+     * @readonly
+     */
+    public int $ruleId;
+    public function __construct(int $ruleId)
+    {
+        $this->ruleId = $ruleId;
+    }
 }

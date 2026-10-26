@@ -16,28 +16,37 @@ use Phplrt\Position\Exception\InvalidArgumentException;
  * @readonly
  */
 final class Position implements
-    PositionInterface,
-    \Stringable
+    PositionInterface
 {
+    /**
+     * @readonly
+     */
+    public int $line = self::MIN_LINE;
+    /**
+     * @readonly
+     */
+    public int $column = self::MIN_COLUMN;
     /**
      * @throws InvalidArgumentException When the line or the column is less
      *         than the minimal allowed one
      */
     public function __construct(
+        int $line = self::MIN_LINE,
+        int $column = self::MIN_COLUMN
+    ) {
         /**
          * The number of the source line the position points at.
          *
          * @var int<1, max>
          */
-        public readonly int $line = self::MIN_LINE,
+        $this->line = $line;
         /**
          * The number of the column within its own {@see $line} the position
          * points at.
          *
          * @var int<1, max>
          */
-        public readonly int $column = self::MIN_COLUMN,
-    ) {
+        $this->column = $column;
         if ($line < self::MIN_LINE) {
             throw InvalidArgumentException::becauseLineIsOutOfRange($line);
         }

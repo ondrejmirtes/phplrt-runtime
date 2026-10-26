@@ -12,6 +12,22 @@ use Phplrt\Contracts\Lexer\TokenInterface;
  */
 final class PrettyTokenPrinter implements TokenPrinterInterface
 {
+    /**
+     * @readonly
+     */
+    private int $length = self::DEFAULT_LENGTH;
+    /**
+     * @readonly
+     */
+    private string $wrap = self::DEFAULT_WRAP;
+    /**
+     * @readonly
+     */
+    private array $replacements = self::DEFAULT_REPLACEMENTS;
+    /**
+     * @readonly
+     */
+    private string $suffix = self::DEFAULT_OVERFLOW_SUFFIX;
     private const DEFAULT_LENGTH = 30;
 
     private const DEFAULT_WRAP = '"';
@@ -23,24 +39,25 @@ final class PrettyTokenPrinter implements TokenPrinterInterface
 
     private const DEFAULT_OVERFLOW_SUFFIX = ' (%s+)';
 
-    public function __construct(
+    public function __construct(int $length = self::DEFAULT_LENGTH, string $wrap = self::DEFAULT_WRAP, array $replacements = self::DEFAULT_REPLACEMENTS, string $suffix = self::DEFAULT_OVERFLOW_SUFFIX)
+    {
         /**
          * @var int<1, max>
          */
-        private readonly int $length = self::DEFAULT_LENGTH,
+        $this->length = $length;
         /**
          * @var non-empty-string
          */
-        private readonly string $wrap = self::DEFAULT_WRAP,
+        $this->wrap = $wrap;
         /**
          * @var array{array<non-empty-string>, array<non-empty-string>}
          */
-        private readonly array $replacements = self::DEFAULT_REPLACEMENTS,
+        $this->replacements = $replacements;
         /**
          * @var non-empty-string
          */
-        private readonly string $suffix = self::DEFAULT_OVERFLOW_SUFFIX,
-    ) {}
+        $this->suffix = $suffix;
+    }
 
     public function print(TokenInterface $token): string
     {
@@ -126,7 +143,7 @@ final class PrettyTokenPrinter implements TokenPrinterInterface
             return \mb_substr($value, $offset, $length);
         }
 
-        return \substr($value, $offset, $length);
+        return (string) \substr($value, $offset, $length);
     }
 
     private function shouldBeShorten(string $value): bool

@@ -33,6 +33,10 @@ use Phplrt\Position\PositionFactory;
 final class MessageInterpolator
 {
     /**
+     * @readonly
+     */
+    private PositionFactoryInterface $factory;
+    /**
      * The place of the source a token starts at, indexed by that token.
      *
      * A line and a column are counted by reading the source from its
@@ -42,16 +46,19 @@ final class MessageInterpolator
      * Note: Upstream this is a WeakMap, which does not exist on PHP 7.4.
      *
      * @var \SplObjectStorage<TokenInterface, PositionInterface>
+     * @readonly
      */
-    private readonly \SplObjectStorage $positions;
+    private \SplObjectStorage $positions;
 
     public function __construct(
+        ?PositionFactoryInterface $factory = null
+    ) {
+        $factory ??= new PositionFactory();
         /**
          * Tells the line and the column of the place the reading has stopped
          * at, in case the message asks about either of them.
          */
-        private readonly PositionFactoryInterface $factory = new PositionFactory(),
-    ) {
+        $this->factory = $factory;
         $this->positions = new \SplObjectStorage();
     }
 
@@ -69,13 +76,13 @@ final class MessageInterpolator
         string $message,
         ReadableInterface $source,
         TokenInterface $token,
-        array $expected = [],
+        array $expected = []
     ): string {
         $result = \preg_replace_callback(
-            pattern: MessagePlaceholder::PATTERN,
-            callback: fn(array $matches): string
+            MessagePlaceholder::PATTERN,
+            fn(array $matches): string
                 => $this->createReplacement($matches, $source, $token, $expected),
-            subject: $message,
+            $message,
         );
 
         // Note: An error is reported by what it says, so a message emptied by
@@ -97,7 +104,7 @@ final class MessageInterpolator
         array $matches,
         ReadableInterface $source,
         TokenInterface $token,
-        array $expected,
+        array $expected
     ): string {
         $name = $matches[1] ?? null;
 
@@ -114,16 +121,24 @@ final class MessageInterpolator
             return $matches[0];
         }
 
-        return match ($placeholder) {
-            MessagePlaceholder::Token => self::createToken($token),
-            MessagePlaceholder::Name => self::createName($token),
-            MessagePlaceholder::Value => self::createValue($token),
-            MessagePlaceholder::Offset => self::createOffset($token),
-            MessagePlaceholder::Line => $this->createLine($source, $token),
-            MessagePlaceholder::Column => $this->createColumn($source, $token),
-            MessagePlaceholder::Expected => self::createExpected($expected),
-            MessagePlaceholder::ExpectedList => self::createExpectedList($expected),
-        };
+        switch ($placeholder) {
+            case MessagePlaceholder::Token:
+                return self::createToken($token);
+            case MessagePlaceholder::Name:
+                return self::createName($token);
+            case MessagePlaceholder::Value:
+                return self::createValue($token);
+            case MessagePlaceholder::Offset:
+                return self::createOffset($token);
+            case MessagePlaceholder::Line:
+                return $this->createLine($source, $token);
+            case MessagePlaceholder::Column:
+                return $this->createColumn($source, $token);
+            case MessagePlaceholder::Expected:
+                return self::createExpected($expected);
+            case MessagePlaceholder::ExpectedList:
+                return self::createExpectedList($expected);
+        }
     }
 
     private static function createToken(TokenInterface $token): string

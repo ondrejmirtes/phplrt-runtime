@@ -37,12 +37,21 @@ namespace Phplrt\Parser\Grammar;
  */
 final class Lexeme implements TerminalInterface
 {
-    public function __construct(
-        public readonly int $tokenId,
+    /**
+     * @readonly
+     */
+    public int $tokenId;
+    /**
+     * @readonly
+     */
+    public bool $keep = true;
+    public function __construct(int $tokenId, bool $keep = true)
+    {
+        $this->tokenId = $tokenId;
         /**
          * Whether the token is kept in the result (a name, a literal) or only
          * consumed (punctuation such as a comma or a bracket).
          */
-        public readonly bool $keep = true,
-    ) {}
+        $this->keep = $keep;
+    }
 }

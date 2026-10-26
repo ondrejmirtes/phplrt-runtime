@@ -32,6 +32,26 @@ use Phplrt\Lexer\Token\UnknownToken;
 final class Tokenizer
 {
     /**
+     * @readonly
+     */
+    private string $pattern;
+    /**
+     * @readonly
+     */
+    private array $prototypes;
+    /**
+     * @readonly
+     */
+    private array $breaks;
+    /**
+     * @readonly
+     */
+    private array $skip = [];
+    /**
+     * @readonly
+     */
+    private array $subgroups = [];
+    /**
      * Max length (in bytes) of the source fragment mentioned in error messages.
      *
      * @var int<1, max>
@@ -40,26 +60,34 @@ final class Tokenizer
 
     /**
      * Stands in for the tokens the configuration says nothing about.
+     * @readonly
      */
-    private readonly Token $fallback;
+    private Token $fallback;
 
     /**
      * Tells the run of this tokenizer apart from the runs of the others
      * reading the same source code.
+     * @readonly
      */
-    private readonly int $identity;
+    private int $identity;
 
     public function __construct(
+        string $pattern,
+        array $prototypes,
+        array $breaks,
+        array $skip = [],
+        array $subgroups = []
+    ) {
         /**
          * @var non-empty-string
          */
-        private readonly string $pattern,
+        $this->pattern = $pattern;
         /**
          * A ready-made token per token ID, cloned and filled in while reading.
          *
          * @var array<int, Token>
          */
-        private readonly array $prototypes,
+        $this->prototypes = $prototypes;
         /**
          * A set of token IDs the analysis must stop after.
          *
@@ -69,21 +97,20 @@ final class Tokenizer
          *
          * @var array<int, true>
          */
-        private readonly array $breaks,
+        $this->breaks = $breaks;
         /**
          * A set of token IDs that are read but never reported.
          *
          * @var array<int, true>
          */
-        private readonly array $skip = [],
+        $this->skip = $skip;
         /**
          * The number of subgroups each token definition has, indexed by the
          * token IDs. A token that is not mentioned captures nothing.
          *
          * @var array<int, int<1, max>>
          */
-        private readonly array $subgroups = [],
-    ) {
+        $this->subgroups = $subgroups;
         $this->fallback = TokenPrototypeLoader::createFallbackPrototype();
         $this->identity = \spl_object_id($this);
     }
@@ -249,7 +276,7 @@ final class Tokenizer
         string $content,
         int $offset,
         array &$tokens,
-        array &$resumable,
+        array &$resumable
     ): int {
         $identity = $this->identity;
         $matches = null;
@@ -372,8 +399,8 @@ final class Tokenizer
         }
 
         $token = new UnknownToken(
-            value: \substr($content, $offset, self::ERROR_FRAGMENT_LENGTH),
-            offset: $offset,
+            (string) \substr($content, $offset, self::ERROR_FRAGMENT_LENGTH),
+            $offset,
         );
 
         if (\preg_last_error() !== \PREG_NO_ERROR) {

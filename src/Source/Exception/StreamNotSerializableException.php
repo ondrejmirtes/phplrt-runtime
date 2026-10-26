@@ -18,7 +18,7 @@ final class StreamNotSerializableException extends LogicException
     {
         $message = 'The stream "%s" has no URI and therefore cannot be serialized';
 
-        return new self(\sprintf($message, $stream), previous: $prev);
+        return new self(\sprintf($message, $stream), 0, $prev);
     }
 
     /**
@@ -29,6 +29,6 @@ final class StreamNotSerializableException extends LogicException
         $message = 'The stream "%s" holds the data of the process it has been opened in '
             . 'and therefore cannot be serialized';
 
-        return new self(\sprintf($message, $uri), previous: $prev);
+        return new self(\sprintf($message, $uri), 0, $prev);
     }
 }

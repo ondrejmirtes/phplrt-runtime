@@ -41,16 +41,21 @@ use Phplrt\Source\Exception\NotReadableException;
 class FileSource extends Readable implements FileInterface
 {
     /**
+     * @readonly
+     */
+    public string $pathname;
+    /**
      * The file this source owns, opened at the first reading of it.
      */
     private ?ResourceSource $reader = null;
 
-    public function __construct(
+    public function __construct(string $pathname)
+    {
         /**
          * @var non-empty-string
          */
-        public readonly string $pathname,
-    ) {}
+        $this->pathname = $pathname;
+    }
 
     /**
      * @api
@@ -95,8 +100,9 @@ class FileSource extends Readable implements FileInterface
     /**
      * @throws FileNotFoundException When the file does not exist
      * @throws NotReadableException When the file cannot be opened or read
+     * @return mixed
      */
-    public function __get(string $property): mixed
+    public function __get(string $property)
     {
         switch ($property) {
             case 'content':
@@ -211,7 +217,7 @@ class FileSource extends Readable implements FileInterface
         // that owns the handle owns the lock along with it.
         @\flock($stream, \LOCK_SH);
 
-        return new ResourceSource($stream, autoclose: true);
+        return new ResourceSource($stream, true);
     }
 
     /**

@@ -13,13 +13,22 @@ namespace Phplrt\Parser\Analysis\Result;
  */
 abstract class Result
 {
-    public function __construct(
+    /**
+     * @readonly
+     * @var mixed
+     */
+    public $value = null;
+    /**
+     * @param mixed $value
+     */
+    public function __construct($value = null)
+    {
         /**
          * What the source has been built into, or {@see null} in case of the
          * analysis has built nothing.
          *
          * @var TValue
          */
-        public readonly mixed $value = null,
-    ) {}
+        $this->value = $value;
+    }
 }

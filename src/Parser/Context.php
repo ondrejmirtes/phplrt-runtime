@@ -19,16 +19,24 @@ use Phplrt\Contracts\Source\ReadableInterface;
  */
 final class Context
 {
-    public function __construct(
+    public int $rule;
+    /**
+     * @readonly
+     */
+    public ReadableInterface $source;
+    public int $begin = 0;
+    public int $length = 0;
+    public function __construct(int $rule, ReadableInterface $source, int $begin = 0, int $length = 0)
+    {
         /**
          * The identifier of the rule being reduced.
          */
-        public int $rule,
+        $this->rule = $rule;
         /**
          * The source the rule has been recognized in, which is what an error
          * refers to.
          */
-        public readonly ReadableInterface $source,
+        $this->source = $source;
         /**
          * The position the rule starts at, counted in bytes from the beginning
          * of the source.
@@ -38,12 +46,12 @@ final class Context
          *
          * @var int<0, max>
          */
-        public int $begin = 0,
+        $this->begin = $begin;
         /**
          * The number of bytes the rule has been recognized from.
          *
          * @var int<0, max>
          */
-        public int $length = 0,
-    ) {}
+        $this->length = $length;
+    }
 }

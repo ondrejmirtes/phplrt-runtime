@@ -17,6 +17,6 @@ final class StreamNotRewindableException extends NotReadableException
         $message = 'The stream "%s" cannot be rewound, so everything located before '
             . 'the position it is at has already been given away';
 
-        return new self(\sprintf($message, $stream), previous: $prev);
+        return new self(\sprintf($message, $stream), 0, $prev);
     }
 }

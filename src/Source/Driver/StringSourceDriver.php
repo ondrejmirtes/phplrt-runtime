@@ -13,7 +13,10 @@ use Phplrt\Source\StringSource;
  */
 final class StringSourceDriver implements SourceDriverInterface
 {
-    public function tryCreate(mixed $source): ?StringSource
+    /**
+     * @param mixed $source
+     */
+    public function tryCreate($source): ?StringSource
     {
         if (!\is_string($source)) {
             return null;

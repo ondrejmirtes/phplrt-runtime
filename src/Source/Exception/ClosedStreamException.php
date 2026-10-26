@@ -14,6 +14,6 @@ final class ClosedStreamException extends NotReadableException
     {
         $message = 'The stream has been closed from the outside';
 
-        return new self($message, previous: $prev);
+        return new self($message, 0, $prev);
     }
 }

@@ -44,7 +44,7 @@ namespace Phplrt\Contracts\Lexer;
  *
  * @readonly
  */
-interface TokenInterface extends \Stringable
+interface TokenInterface
 {
     /**
      * The minimal offset a token is allowed to have.

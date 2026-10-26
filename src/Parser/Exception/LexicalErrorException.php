@@ -14,6 +14,6 @@ final class LexicalErrorException extends ParserRuntimeException
 {
     public static function becauseSourceIsNotTokenizable(LexerRuntimeExceptionInterface $e): self
     {
-        return new self($e->source, $e->token, $e->getMessage(), previous: $e);
+        return new self($e->source, $e->token, $e->getMessage(), null, 0, $e);
     }
 }

@@ -49,10 +49,15 @@ namespace Phplrt\Parser\Grammar;
  */
 final class Alternation implements ProductionInterface
 {
-    public function __construct(
+    /**
+     * @readonly
+     */
+    public array $ruleIds;
+    public function __construct(array $ruleIds)
+    {
         /**
          * @var non-empty-list<int>
          */
-        public readonly array $ruleIds,
-    ) {}
+        $this->ruleIds = $ruleIds;
+    }
 }

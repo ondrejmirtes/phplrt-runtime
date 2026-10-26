@@ -17,10 +17,10 @@ interface SourceFactoryInterface
      * A value that is a source already MUST be given back as is.
      *
      * @template TArgSource
-     * @param TArgSource $source the value to create a source out of
+     * @param mixed $source the value to create a source out of
      * @return (TArgSource is ReadableInterface ? TArgSource : ReadableInterface)
      * @throws SourceExceptionInterface if a source cannot be created out of
      *         the given value
      */
-    public function create(mixed $source): ReadableInterface;
+    public function create($source): ReadableInterface;
 }

@@ -18,11 +18,11 @@ final class EmptyTokenException extends LexerRuntimeException
     public static function becauseTokenIsEmpty(
         ReadableInterface $source,
         TokenInterface $token,
-        ?\Throwable $previous = null,
+        ?\Throwable $previous = null
     ): self {
         $message = 'Token %s matches an empty string, which makes the lexer unable to advance';
         $message = \sprintf($message, $token);
 
-        return new self($source, $token, $message, previous: $previous);
+        return new self($source, $token, $message, 0, $previous);
     }
 }

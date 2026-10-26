@@ -17,6 +17,6 @@ final class StreamNotSeekableException extends LogicException
     {
         $message = 'The stream "%s" does not support offset (seek/rewind) changes';
 
-        return new self(\sprintf($message, $stream), previous: $prev);
+        return new self(\sprintf($message, $stream), 0, $prev);
     }
 }

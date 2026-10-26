@@ -11,30 +11,35 @@ use Phplrt\Parser\Internal\ExpectationPrinter;
 class UnexpectedTokenException extends ParserRuntimeException
 {
     /**
+     * @readonly
+     */
+    public array $expected = [];
+    /**
      * @param int<0, max>|null $length
      */
     public function __construct(
         ReadableInterface $source,
         TokenInterface $token,
         string $message,
+        array $expected = [],
+        ?int $length = null,
+        int $code = 0,
+        ?\Throwable $previous = null
+    ) {
         /**
          * The names of the tokens that could have been read instead of the one
          * the error occurred on.
          *
          * @var list<non-empty-string>
          */
-        public readonly array $expected = [],
-        ?int $length = null,
-        int $code = 0,
-        ?\Throwable $previous = null,
-    ) {
+        $this->expected = $expected;
         parent::__construct(
-            source: $source,
-            token: $token,
-            message: $message,
-            length: $length,
-            code: $code,
-            previous: $previous,
+            $source,
+            $token,
+            $message,
+            $length,
+            $code,
+            $previous,
         );
     }
 
@@ -45,15 +50,9 @@ class UnexpectedTokenException extends ParserRuntimeException
         ReadableInterface $source,
         TokenInterface $token,
         array $expected = [],
-        ?\Throwable $previous = null,
+        ?\Throwable $previous = null
     ): self {
-        return new self(
-            source: $source,
-            token: $token,
-            message: self::createMessage($token, $expected),
-            expected: $expected,
-            previous: $previous,
-        );
+        return new self($source, $token, self::createMessage($token, $expected), $expected, null, 0, $previous);
     }
 
     /**
@@ -76,18 +75,9 @@ class UnexpectedTokenException extends ParserRuntimeException
         string $message,
         array $expected = [],
         int $rule = 0,
-        ?\Throwable $previous = null,
+        ?\Throwable $previous = null
     ): self {
-        return new self(
-            source: $source,
-            token: $token,
-            message: $message,
-            expected: $expected,
-            // The rules are numbered from zero and an error carries no code at
-            // all by default, so the identifier is counted from one here
-            code: $rule + 1,
-            previous: $previous,
-        );
+        return new self($source, $token, $message, $expected, null, $rule + 1, $previous);
     }
 
     /**

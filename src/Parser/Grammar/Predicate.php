@@ -46,12 +46,21 @@ namespace Phplrt\Parser\Grammar;
  */
 final class Predicate implements ProductionInterface
 {
-    public function __construct(
-        public readonly int $ruleId,
+    /**
+     * @readonly
+     */
+    public int $ruleId;
+    /**
+     * @readonly
+     */
+    public bool $isExpected = true;
+    public function __construct(int $ruleId, bool $isExpected = true)
+    {
+        $this->ruleId = $ruleId;
         /**
          * Contains {@see true} in case of the rule must be recognized at this
          * position, or {@see false} in case of it must not.
          */
-        public readonly bool $isExpected = true,
-    ) {}
+        $this->isExpected = $isExpected;
+    }
 }

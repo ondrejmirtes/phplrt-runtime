@@ -22,13 +22,10 @@ final class StreamNotOpenedException extends NotReadableException
     public static function becauseStreamCannotBeOpened(
         string $uri,
         ?array $error = null,
-        ?\Throwable $prev = null,
+        ?\Throwable $prev = null
     ): self {
         $message = 'The stream "%s" cannot be opened';
 
-        return new self(
-            \sprintf($message, $uri),
-            previous: PhpError::toThrowable($error, $prev),
-        );
+        return new self(\sprintf($message, $uri), 0, PhpError::toThrowable($error, $prev));
     }
 }

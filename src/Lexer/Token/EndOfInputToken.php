@@ -17,14 +17,14 @@ class EndOfInputToken extends Token
      * @param int<0, max> $offset
      */
     public function __construct(
-        int $offset,
+        int $offset
     ) {
         parent::__construct(
-            id: self::TOKEN_ID,
-            name: Channel::EndOfInput()->name,
-            channel: Channel::EndOfInput(),
-            value: '',
-            offset: $offset,
+            self::TOKEN_ID,
+            Channel::EndOfInput()->name,
+            Channel::EndOfInput(),
+            '',
+            $offset,
         );
     }
 }

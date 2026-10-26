@@ -17,6 +17,6 @@ final class FileNotReadableException extends NotReadableException
     {
         $message = 'An error occurred while trying read the file "%s"';
 
-        return new self(\sprintf($message, $filename), previous: $prev);
+        return new self(\sprintf($message, $filename), 0, $prev);
     }
 }

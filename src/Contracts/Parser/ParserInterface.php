@@ -28,5 +28,5 @@ interface ParserInterface
      * @throws RuntimeExceptionInterface if the analyzed source contains errors
      * @throws \Throwable in the case of any other unhandled error occurs
      */
-    public function parse(ReadableInterface $source): mixed;
+    public function parse(ReadableInterface $source);
 }

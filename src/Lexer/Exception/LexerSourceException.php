@@ -16,6 +16,6 @@ final class LexerSourceException extends LexerException
     {
         $message = \sprintf('The source code cannot be read: %s', $e->getMessage());
 
-        return new self($message, previous: $e);
+        return new self($message, 0, $e);
     }
 }

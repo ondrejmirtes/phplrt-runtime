@@ -16,8 +16,9 @@ final class ResourceSourceDriver implements SourceDriverInterface
 {
     /**
      * @throws NotCreatableException in case the resource is not a stream
+     * @param mixed $source
      */
-    public function tryCreate(mixed $source): ?ResourceSource
+    public function tryCreate($source): ?ResourceSource
     {
         if (!\is_resource($source)) {
             return null;

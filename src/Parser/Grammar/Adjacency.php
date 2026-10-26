@@ -47,11 +47,16 @@ namespace Phplrt\Parser\Grammar;
  */
 final class Adjacency implements TerminalInterface
 {
-    public function __construct(
+    /**
+     * @readonly
+     */
+    public bool $isExpected = true;
+    public function __construct(bool $isExpected = true)
+    {
         /**
          * Contains {@see true} in case of the tokens must be written with
          * nothing in between, or {@see false} in case of they must not.
          */
-        public readonly bool $isExpected = true,
-    ) {}
+        $this->isExpected = $isExpected;
+    }
 }

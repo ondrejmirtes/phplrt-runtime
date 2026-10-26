@@ -16,8 +16,9 @@ final class SplFileInfoSourceDriver implements SourceDriverInterface
 {
     /**
      * @throws NotCreatableException in case the reference carries no pathname
+     * @param mixed $source
      */
-    public function tryCreate(mixed $source): ?FileSource
+    public function tryCreate($source): ?FileSource
     {
         if (!$source instanceof \SplFileInfo) {
             return null;

@@ -12,35 +12,43 @@ use Phplrt\Contracts\Lexer\TokenInterface;
  */
 final class FailureTracingResult extends TracingResult
 {
+    public TokenInterface $stoppedAt;
+    public ?TokenInterface $token = null;
+    public array $expected = [];
+    public ?int $labelled = null;
     /**
      * @param array<int<0, max>, int|TokenInterface> $entries
      * @param int<0, max> $length
      */
     public function __construct(
+        TokenInterface $stoppedAt,
+        ?TokenInterface $token = null,
+        array $expected = [],
+        ?int $labelled = null,
+        array $entries = [],
+        int $length = 0
+    ) {
         /**
          * The token the reading has stopped at, which is where everything the
          * grammar did read ends.
          */
-        public TokenInterface $stoppedAt,
+        $this->stoppedAt = $stoppedAt;
         /**
          * The token the reading has broken on, if anywhere in particular.
          */
-        public ?TokenInterface $token = null,
+        $this->token = $token;
         /**
          * The identifiers of the tokens that could have been read instead.
          *
          * @var list<int>
          */
-        public array $expected = [],
+        $this->expected = $expected;
         /**
          * The identifier of the rule describing the failure by a message of
          * its own, or {@see null} in case the failure is described by the
          * tokens that could have been read instead.
          */
-        public ?int $labelled = null,
-        array $entries = [],
-        int $length = 0,
-    ) {
+        $this->labelled = $labelled;
         parent::__construct($entries, $length);
     }
 }

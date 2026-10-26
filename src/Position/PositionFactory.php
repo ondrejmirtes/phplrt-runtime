@@ -33,8 +33,9 @@ final class PositionFactory implements PositionFactoryInterface
      * The number of bytes read at once.
      *
      * @var int<1, max>
+     * @readonly
      */
-    private readonly int $chunkSize;
+    private int $chunkSize;
 
     /**
      * @throws InvalidArgumentException When the number of bytes is not positive
@@ -107,7 +108,7 @@ final class PositionFactory implements PositionFactoryInterface
             if ($current === $line && $remaining > 0 && $index < $length) {
                 // A column pointing beyond the end of its line is not walked
                 // any further than the line itself goes.
-                $rest = \substr($chunk, $index, $remaining);
+                $rest = (string) \substr($chunk, $index, $remaining);
                 $delimiter = \strpos($rest, self::LINE_DELIMITER);
 
                 if ($delimiter !== false) {

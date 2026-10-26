@@ -20,10 +20,10 @@ final class PcreErrorException extends LexerRuntimeException
         ReadableInterface $source,
         TokenInterface $token,
         string $error,
-        ?\Throwable $previous = null,
+        ?\Throwable $previous = null
     ): self {
         $message = \sprintf('A PCRE error (%s) occurred while reading %s', $error, $token);
 
-        return new self($source, $token, $message, previous: $previous);
+        return new self($source, $token, $message, 0, $previous);
     }
 }

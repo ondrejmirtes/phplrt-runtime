@@ -17,6 +17,6 @@ final class FileNotFoundException extends NotReadableException
     {
         $message = 'File "%s" not found';
 
-        return new self(\sprintf($message, $pathname), previous: $prev);
+        return new self(\sprintf($message, $pathname), 0, $prev);
     }
 }

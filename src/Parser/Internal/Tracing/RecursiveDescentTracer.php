@@ -51,6 +51,22 @@ use Phplrt\Parser\Internal\Tracing\Result\SuccessfulTracingResult;
 final class RecursiveDescentTracer
 {
     /**
+     * @readonly
+     */
+    private array $grammar;
+    /**
+     * @readonly
+     */
+    private array $messages = [];
+    /**
+     * @readonly
+     */
+    private array $choicePrediction = [];
+    /**
+     * @readonly
+     */
+    private array $sequencePrediction = [];
+    /**
      * The trace of the reading: rule identifiers on entering, tokens read,
      * negated rule identifiers on leaving.
      *
@@ -70,15 +86,17 @@ final class RecursiveDescentTracer
      * may begin with any token at all.
      *
      * @var StartPredictionTableType
+     * @readonly
      */
-    private readonly array $startPrediction;
+    private array $startPrediction;
 
     /**
      * The rules that become a node of the result.
      *
      * @var KeptTableType
+     * @readonly
      */
-    private readonly array $kept;
+    private array $kept;
 
     /**
      * The tokens of the source the trace is being written for.
@@ -97,10 +115,17 @@ final class RecursiveDescentTracer
      * @param KeptTableType $kept the rules that become a node of the result
      */
     public function __construct(
+        array $grammar,
+        array $messages = [],
+        array $kept = [],
+        array $startPrediction = [],
+        array $choicePrediction = [],
+        array $sequencePrediction = []
+    ) {
         /**
          * @var list<RuleInterface>
          */
-        private readonly array $grammar,
+        $this->grammar = $grammar;
         /**
          * The rules describing their own failure by a message of their own.
          *
@@ -110,9 +135,7 @@ final class RecursiveDescentTracer
          *
          * @var MessageTableType
          */
-        private readonly array $messages = [],
-        array $kept = [],
-        array $startPrediction = [],
+        $this->messages = $messages;
         /**
          * The alternatives of an alternation worth trying, by the token the
          * reading is at. A negated identifier names a terminal reading that
@@ -120,7 +143,7 @@ final class RecursiveDescentTracer
          *
          * @var ChoicePredictionTableType
          */
-        private readonly array $choicePrediction = [],
+        $this->choicePrediction = $choicePrediction;
         /**
          * The elements of the sequences read in place. A negated identifier
          * names either the rule an optional element wraps or a negative
@@ -128,8 +151,7 @@ final class RecursiveDescentTracer
          *
          * @var SequencePredictionTableType
          */
-        private readonly array $sequencePrediction = [],
-    ) {
+        $this->sequencePrediction = $sequencePrediction;
         // A rule that leaves nothing behind is not written into the trace at
         // all, which is fewer entries to reduce afterward. A grammar that has
         // not been described is traced whole: every rule is taken for one that
@@ -156,11 +178,12 @@ final class RecursiveDescentTracer
      *
      * @param int<0, max> $initial the identifier of the rule the recognition
      *        starts at
+     * @return \Phplrt\Parser\Internal\Tracing\Result\SuccessfulTracingResult|\Phplrt\Parser\Internal\Tracing\Result\FailureTracingResult
      */
     public function trace(
         BufferInterface $buffer,
-        int $initial,
-    ): SuccessfulTracingResult|FailureTracingResult {
+        int $initial
+    ) {
         if ($this->grammar === []) {
             // Fast-finish on empty grammar
             return new FailureTracingResult($buffer->current, $buffer->current);
@@ -637,9 +660,9 @@ final class RecursiveDescentTracer
         }
 
         return $this->error->toFailureResult(
-            stoppedAt: $stoppedAt,
-            entries: $this->entries,
-            length: $isMatched ? $this->length : 0,
+            $stoppedAt,
+            $this->entries,
+            $isMatched ? $this->length : 0,
         );
     }
 

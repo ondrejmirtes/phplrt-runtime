@@ -16,6 +16,6 @@ final class StreamNotReadableException extends NotReadableException
     {
         $message = 'The stream "%s" is not open for reading';
 
-        return new self(\sprintf($message, $stream), previous: $prev);
+        return new self(\sprintf($message, $stream), 0, $prev);
     }
 }

@@ -13,6 +13,6 @@ final class NonPositiveBytesCountException extends InvalidArgumentException
     {
         $message = 'Number of bytes to read must be greater than 0, but %d given';
 
-        return new self(\sprintf($message, $bytes), previous: $prev);
+        return new self(\sprintf($message, $bytes), 0, $prev);
     }
 }

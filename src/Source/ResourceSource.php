@@ -44,6 +44,10 @@ use Phplrt\Source\Exception\StreamReadingException;
 class ResourceSource extends Readable
 {
     /**
+     * @readonly
+     */
+    private bool $autoclose = false;
+    /**
      * The number of bytes taken out of a stream at once while it is being
      * read through.
      *
@@ -61,15 +65,16 @@ class ResourceSource extends Readable
      * The position of the stream this source begins at.
      *
      * @var int<0, max>
+     * @readonly
      */
-    private readonly int $initial;
+    private int $initial;
 
     /**
      * The resource this source reads from.
      *
      * @var resource
      */
-    private mixed $stream;
+    private $stream;
 
     /**
      * The data of the source, in case it has already been read.
@@ -80,39 +85,44 @@ class ResourceSource extends Readable
      * Gets stream URI string (can be optional)
      *
      * @var non-empty-string|null
+     * @readonly
      */
-    public readonly ?string $uri;
+    public ?string $uri;
 
     /**
      * Gets the stream access mode (e.g., "rb", "rb+", "w", etc.)
      *
      * @var non-empty-string
+     * @readonly
      */
-    public readonly string $mode;
+    public string $mode;
 
     /**
      * Gets {@see true} if the stream is local
+     * @readonly
      */
-    public readonly bool $isLocal;
+    public bool $isLocal;
 
     /**
      * Gets {@see true} if the stream supports offset (seek/rewind) changes
+     * @readonly
      */
-    public readonly bool $isSeekable;
+    public bool $isSeekable;
 
     /**
-     * @param resource $stream
+     * @param mixed $stream
      * @throws NotCreatableException When the given value is not a resource stream
      * @throws StreamNotReadableException When the resource stream is not open
      *         for reading
      */
     public function __construct(
-        mixed $stream,
+        $stream,
+        bool $autoclose = false
+    ) {
         /**
          * Whether the resource stream is closed along with this object.
          */
-        private readonly bool $autoclose = false,
-    ) {
+        $this->autoclose = $autoclose;
         if (!\is_resource($stream)) {
             throw NotCreatableException::becauseSourceIsInvalid($stream);
         }
@@ -131,7 +141,7 @@ class ResourceSource extends Readable
         $this->isLocal = $this->uri !== null && \stream_is_local($this->uri);
         $this->isSeekable = $metadata['seekable'];
 
-        if (!\str_contains($this->mode, 'r') && !\str_contains($this->mode, '+')) {
+        if (strpos($this->mode, 'r') === false && strpos($this->mode, '+') === false) {
             throw StreamNotReadableException::becauseStreamIsNotReadable($this->uri ?? $this->mode);
         }
 
@@ -141,9 +151,9 @@ class ResourceSource extends Readable
     /**
      * @api
      *
-     * @param resource $resource
+     * @param mixed $resource
      */
-    public static function createFromResource(mixed $resource): self
+    public static function createFromResource($resource): self
     {
         return new self($resource, false);
     }
@@ -195,7 +205,7 @@ class ResourceSource extends Readable
      *         rewound and has already been read past the position the source
      *         begins at
      */
-    public function toSeekableSource(): StringSource|VirtualSource
+    public function toSeekableSource()
     {
         $content = $this->getContents();
 
@@ -211,8 +221,9 @@ class ResourceSource extends Readable
      * @throws NotReadableException When the stream cannot be read, or cannot be
      *         rewound and has already been read past the position the source
      *         begins at
+     * @return mixed
      */
-    public function __get(string $property): mixed
+    public function __get(string $property)
     {
         switch ($property) {
             case 'content':
@@ -329,7 +340,7 @@ class ResourceSource extends Readable
      * @return resource
      * @throws ClosedStreamException When the resource has been closed from the outside
      */
-    private function requireStream(): mixed
+    private function requireStream()
     {
         if (!\is_resource($this->stream)) {
             throw ClosedStreamException::becauseStreamIsClosed();
@@ -382,8 +393,8 @@ class ResourceSource extends Readable
 
         // A filter is a view of the stream it refers to rather than a stream
         // of its own
-        return \str_starts_with($uri, 'php://')
-            && !\str_starts_with($uri, 'php://filter/');
+        return strncmp($uri, 'php://', strlen('php://')) === 0
+            && strncmp($uri, 'php://filter/', strlen('php://filter/')) !== 0;
     }
 
     /**
@@ -437,7 +448,7 @@ class ResourceSource extends Readable
 
         try {
             \fclose($this->requireStream());
-        } catch (ClosedStreamException) {
+        } catch (ClosedStreamException $exception) {
             // Note: The stream has been closed from the outside, so there is
             //       nothing left for this object to give up.
         }

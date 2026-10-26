@@ -20,11 +20,11 @@ final class UnknownToken extends Token
     public function __construct(string $value, int $offset)
     {
         parent::__construct(
-            id: self::TOKEN_ID,
-            name: null,
-            channel: Channel::Unknown(),
-            value: $value,
-            offset: $offset,
+            self::TOKEN_ID,
+            null,
+            Channel::Unknown(),
+            $value,
+            $offset,
         );
     }
 }

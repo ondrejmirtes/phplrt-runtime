@@ -27,6 +27,10 @@ use Phplrt\Contracts\Parser\Exception\RuntimeExceptionInterface;
 final class PartialResult extends SuccessfulResult
 {
     /**
+     * @readonly
+     */
+    public TokenInterface $token;
+    /**
      * The error, or the means of building it until it is asked about.
      *
      * Saying what has stood in the way costs an exception object along with
@@ -39,27 +43,31 @@ final class PartialResult extends SuccessfulResult
      *
      * @phpstan-readonly-allow-private-mutation
      */
-    private RuntimeExceptionInterface|\Closure $reported;
+    private $reported;
 
     /**
      * @param TValue $value
      * @param RuntimeExceptionInterface|(\Closure(): RuntimeExceptionInterface) $error
      */
     public function __construct(
-        mixed $value,
+        $value,
+        TokenInterface $token,
+        $error
+    ) {
         /**
          * The first token the grammar says nothing about, which is where the
          * fragment ends.
          */
-        public readonly TokenInterface $token,
-        RuntimeExceptionInterface|\Closure $error,
-    ) {
+        $this->token = $token;
         $this->reported = $error;
 
         parent::__construct($value);
     }
 
-    public function __get(string $property): mixed
+    /**
+     * @return mixed
+     */
+    public function __get(string $property)
     {
         switch ($property) {
             case 'error':

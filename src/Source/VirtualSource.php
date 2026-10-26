@@ -26,26 +26,35 @@ use Phplrt\Contracts\Source\ReadableInterface;
  */
 class VirtualSource extends Readable implements FileInterface
 {
-    public function __construct(
+    /**
+     * @readonly
+     */
+    public string $pathname;
+    /**
+     * @readonly
+     */
+    private ReadableInterface $source;
+    public function __construct(string $pathname, ReadableInterface $source)
+    {
         /**
          * The virtual file pathname
          *
          * @var non-empty-string
          */
-        public readonly string $pathname,
+        $this->pathname = $pathname;
         /**
          * The source everything is read from
          */
-        private readonly ReadableInterface $source,
-    ) {}
+        $this->source = $source;
+    }
 
     /**
      * @api
      *
      * @param non-empty-string $pathname
-     * @param resource $stream
+     * @param mixed $stream
      */
-    public static function createFromResourceStream(string $pathname, mixed $stream): self
+    public static function createFromResourceStream(string $pathname, $stream): self
     {
         return new self($pathname, new ResourceSource($stream, false));
     }
@@ -109,8 +118,9 @@ class VirtualSource extends Readable implements FileInterface
     /**
      * @throws SourceExceptionInterface may occur when it is not possible to
      *         read source's data and/or convert it to a string
+     * @return mixed
      */
-    public function __get(string $property): mixed
+    public function __get(string $property)
     {
         switch ($property) {
             case 'content':

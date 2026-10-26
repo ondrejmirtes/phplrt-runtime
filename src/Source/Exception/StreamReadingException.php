@@ -24,6 +24,6 @@ final class StreamReadingException extends NotReadableException
 
         $message = 'The stream cannot be read: %s';
 
-        return new self(\sprintf($message, $reason->getMessage()), previous: $reason);
+        return new self(\sprintf($message, $reason->getMessage()), 0, $reason);
     }
 }

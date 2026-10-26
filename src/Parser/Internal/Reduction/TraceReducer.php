@@ -29,18 +29,25 @@ use Phplrt\Parser\Internal\Tracing\Result\TracingResult;
 final class TraceReducer
 {
     /**
+     * @readonly
+     */
+    private array $reducers = [];
+    /**
      * The rules built out of the values of all their children, rather than
      * out of a single value, indexed by the rule identifiers.
      *
      * @var array<int, bool>
+     * @readonly
      */
-    private readonly array $merged;
+    private array $merged;
 
     /**
      * @param list<RuleInterface> $grammar
      */
     public function __construct(
         array $grammar,
+        array $reducers = []
+    ) {
         /**
          * The callbacks converting the rules into the nodes, indexed by the
          * rule identifiers. The rules without a callback are reduced to their
@@ -48,8 +55,7 @@ final class TraceReducer
          *
          * @var array<int<0, max>, ReducerType>
          */
-        private readonly array $reducers = [],
-    ) {
+        $this->reducers = $reducers;
         $this->merged = self::calculateMerged($grammar);
     }
 
@@ -87,8 +93,9 @@ final class TraceReducer
      *
      * @param int<0, max> $initial the identifier of the rule the analysis has
      *        started at
+     * @return mixed
      */
-    public function reduce(TracingResult $trace, ReadableInterface $source, int $initial): mixed
+    public function reduce(TracingResult $trace, ReadableInterface $source, int $initial)
     {
         $entries = $trace->entries;
         $reducers = $this->reducers;

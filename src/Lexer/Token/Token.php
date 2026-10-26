@@ -13,6 +13,12 @@ use Phplrt\Lexer\Token\Printer\PrettyTokenPrinter;
  */
 class Token implements TokenInterface
 {
+    public int $id;
+    public ?string $name;
+    public ChannelInterface $channel;
+    public string $value;
+    public int $offset = self::MIN_OFFSET;
+    public array $captures = [];
     /**
      * @var int<0, max>
      */
@@ -22,17 +28,29 @@ class Token implements TokenInterface
      * @param int<0, max>|null $size
      */
     public function __construct(
-        public int $id,
+        int $id,
+        ?string $name,
+        ChannelInterface $channel,
+        string $value,
+        int $offset = self::MIN_OFFSET,
+        array $captures = [],
+        /**
+         * The size of the fragment the token has been read from, or
+         * {@see null} in case of the token is as large as its own value.
+         */
+        ?int $size = null
+    ) {
+        $this->id = $id;
         /**
          * @var non-empty-string|null
          */
-        public ?string $name,
-        public ChannelInterface $channel,
-        public string $value,
+        $this->name = $name;
+        $this->channel = $channel;
+        $this->value = $value;
         /**
          * @var int<0, max>
          */
-        public int $offset = self::MIN_OFFSET,
+        $this->offset = $offset;
         /**
          * What the subgroups of the token definition have captured, in the
          * order the subgroups are written.
@@ -42,13 +60,7 @@ class Token implements TokenInterface
          *
          * @var list<string>
          */
-        public array $captures = [],
-        /**
-         * The size of the fragment the token has been read from, or
-         * {@see null} in case of the token is as large as its own value.
-         */
-        ?int $size = null,
-    ) {
+        $this->captures = $captures;
         $this->size = $size ?? \strlen($value);
     }
 

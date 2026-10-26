@@ -17,7 +17,10 @@ use Phplrt\Contracts\Lexer\TokenInterface;
  */
 abstract class TracingResult
 {
-    public function __construct(
+    public array $entries = [];
+    public int $length = 0;
+    public function __construct(array $entries = [], int $length = 0)
+    {
         /**
          * The recognized rules in the order they have been applied.
          *
@@ -27,12 +30,12 @@ abstract class TracingResult
          *
          * @var array<int<0, max>, int|TokenInterface>
          */
-        public array $entries = [],
+        $this->entries = $entries;
         /**
          * The number of meaningful entries. Anything beyond it must be ignored.
          *
          * @var int<0, max>
          */
-        public int $length = 0,
-    ) {}
+        $this->length = $length;
+    }
 }

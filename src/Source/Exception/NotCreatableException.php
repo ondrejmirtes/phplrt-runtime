@@ -21,10 +21,13 @@ final class NotCreatableException extends RuntimeException
             $type,
         ]);
 
-        return new self($message, previous: $prev);
+        return new self($message, 0, $prev);
     }
 
-    public static function becauseSourceIsInvalid(mixed $source, ?\Throwable $prev = null): self
+    /**
+     * @param mixed $source
+     */
+    public static function becauseSourceIsInvalid($source, ?\Throwable $prev = null): self
     {
         /** @phpstan-ignore-next-line : False-positive, get_debug_type returns non-empty string */
         return self::becauseSourceIs(\get_debug_type($source), $prev);

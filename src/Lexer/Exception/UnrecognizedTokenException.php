@@ -18,10 +18,10 @@ final class UnrecognizedTokenException extends LexerRuntimeException
     public static function becauseInputIsUnrecognized(
         ReadableInterface $source,
         TokenInterface $token,
-        ?\Throwable $previous = null,
+        ?\Throwable $previous = null
     ): self {
         $message = \sprintf('Unrecognized %s', $token);
 
-        return new self($source, $token, $message, previous: $previous);
+        return new self($source, $token, $message, 0, $previous);
     }
 }

@@ -12,23 +12,33 @@ use Phplrt\Exception\ErrorPrinter;
 abstract class LexerRuntimeException extends LexerException implements
     RuntimeExceptionInterface
 {
+    /**
+     * @readonly
+     */
+    public ReadableInterface $source;
+    /**
+     * @readonly
+     */
+    public TokenInterface $token;
     public function __construct(
+        ReadableInterface $source,
+        TokenInterface $token,
+        string $message,
+        int $code = 0,
+        ?\Throwable $previous = null
+    ) {
         /**
          * Gets the source object in which the error occurred.
          */
-        public readonly ReadableInterface $source,
+        $this->source = $source;
         /**
          * Gets the token on which the error occurred.
          */
-        public readonly TokenInterface $token,
-        string $message,
-        int $code = 0,
-        ?\Throwable $previous = null,
-    ) {
+        $this->token = $token;
         parent::__construct(
-            message: $message,
-            code: $code,
-            previous: $previous,
+            $message,
+            $code,
+            $previous,
         );
     }
 
@@ -37,7 +47,7 @@ abstract class LexerRuntimeException extends LexerException implements
         try {
             return (string) (new ErrorPrinter())
                 ->print($this);
-        } catch (\Throwable) {
+        } catch (\Throwable $exception) {
             return parent::__toString();
         }
     }

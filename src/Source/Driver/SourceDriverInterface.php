@@ -19,5 +19,5 @@ interface SourceDriverInterface
      * @throws SourceExceptionInterface in case the reference is recognized,
      *         but the source cannot be created from it
      */
-    public function tryCreate(mixed $source): ?ReadableInterface;
+    public function tryCreate($source): ?ReadableInterface;
 }

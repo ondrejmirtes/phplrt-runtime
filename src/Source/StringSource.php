@@ -14,12 +14,17 @@ use Phplrt\Source\Exception\NonPositiveBytesCountException;
  */
 class StringSource extends Readable
 {
-    public function __construct(
+    /**
+     * @readonly
+     */
+    public string $content = '';
+    public function __construct(string $content = '')
+    {
         /**
          * The source code this object is built over
          */
-        public readonly string $content = '',
-    ) {}
+        $this->content = $content;
+    }
 
     /**
      * An alias of the {@see $content} property.
@@ -60,6 +65,6 @@ class StringSource extends Readable
             throw NonPositiveBytesCountException::becauseBytesCountIsNotPositive($bytes);
         }
 
-        return \substr($this->content, $offset, $bytes);
+        return (string) \substr($this->content, $offset, $bytes);
     }
 }

@@ -40,15 +40,17 @@ class Lexer implements LexerInterface
 
     /**
      * Reads everything this lexer recognizes on its own.
+     * @readonly
      */
-    private readonly Tokenizer $tokenizer;
+    private Tokenizer $tokenizer;
 
     /**
      * A map of token ID and what the token does to the reading.
      *
      * @var array<int, LexerInterface|null>
+     * @readonly
      */
-    private readonly array $transitions;
+    private array $transitions;
 
     /**
      * The channels that are not reported, keyed by name, so that a token read
@@ -56,8 +58,9 @@ class Lexer implements LexerInterface
      * list.
      *
      * @var array<non-empty-string, true>
+     * @readonly
      */
-    private readonly array $excluded;
+    private array $excluded;
 
     /**
      * The pattern, channels and names are fully consumed by the executor, so
@@ -155,20 +158,17 @@ class Lexer implements LexerInterface
          * goes on exactly as it would otherwise, and it is only left out of the
          * stream: nothing downstream ever sees it.
          */
-        ?iterable $skip = null,
+        ?iterable $skip = null
     ) {
         $this->excluded = self::formatLexerSkippedTokens($skip ?? self::getDefaultSkipChannels());
         $this->transitions = $transitions;
 
         $this->tokenizer = new Tokenizer(
-            pattern: $pattern,
-            prototypes: TokenPrototypeLoader::load($channels, $names),
-            // A transition that ends the reading carries no lexer, so we can't
-            // just hand the transitions over and "isset()" them there. The
-            // tokenizer needs the plain set of IDs it has to stop after.
-            breaks: \array_fill_keys(\array_keys($transitions), true),
-            skip: self::formatTokenizerSkippedTokens($channels, $transitions, $this->excluded),
-            subgroups: $subgroups,
+            $pattern,
+            TokenPrototypeLoader::load($channels, $names),
+            \array_fill_keys(\array_keys($transitions), true),
+            self::formatTokenizerSkippedTokens($channels, $transitions, $this->excluded),
+            $subgroups,
         );
     }
 
@@ -200,7 +200,7 @@ class Lexer implements LexerInterface
     private static function formatTokenizerSkippedTokens(
         array $channels,
         array $transitions,
-        array $excluded,
+        array $excluded
     ): array {
         if ($excluded === []) {
             return [];
@@ -342,7 +342,7 @@ class Lexer implements LexerInterface
         string $content,
         int $offset,
         Token $token,
-        array &$resumable,
+        array &$resumable
     ): TokenEmbedding {
         /**
          * The source code has already been read, so a lexer of the same kind
